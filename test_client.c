@@ -8,8 +8,12 @@ struct sockaddr_in server; //This is our main socket variable.
 int fd; //This is the socket file descriptor that will be used to identify the socket
 int conn; //This is the connection file descriptor that will be used to distinguish client connections.
 char message[100] = ""; //This array will store the messages that are sent by the server
+char message2[100] = "";
 char *server_IP;
 u_short port;
+
+
+
 
 int main(int argc, char const *argv[]){
 	// manejo de ingreso de variables
@@ -36,10 +40,13 @@ int main(int argc, char const *argv[]){
 
 	connect(fd, (struct sockaddr *)&server, sizeof(server)); //This connects the client to the server.
 
+
 	while(1) {
 	    printf("Enter a message: ");
 	    fgets(message, 100, stdin);
 	    send(fd, message, strlen(message), 0);
+	    recv(fd, message2, 100, 0);
+	     printf("Message Received: %s\n", message2);
 	    //An extra breaking condition can be added here (to terminate the while loop)
 	}
 }
