@@ -82,7 +82,7 @@ int main(int argc, char const *argv[]){
 	else{
 		server_IP = argv[1];
 		port = (u_short) atoi(argv[2]);
-		usuario= argv[3];
+		Usuario= argv[3];
 	}
 
 
@@ -119,9 +119,10 @@ int main(int argc, char const *argv[]){
 		       case 1: //  Chat with all
 		          printf("Ingrese un mensaje: ");
 	    				fgets(message, 100, stdin);
+						//strcat(usuario,": ");
 							strcpy(final,Usuario);
-							strcpy(final,":")
-							strcpy(final,message)
+							strcat(final,message);
+							//strcat(final,message);
 	    				send(fd, final, strlen(final), 0);
 
 		         break;
