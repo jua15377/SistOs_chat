@@ -3,6 +3,12 @@
 #include <stdlib.h>
 #include <netinet/in.h> //For the AF_INET (Address Family)
 #include <string.h>
+#define BUFFER_SIZE 1024
+
+char buffer[BUFFER_SIZE];
+int sockfd = 0;
+char s[INET_ADDRSTRLEN];
+char *Usuario;
 
 struct sockaddr_in server; //This is our main socket variable.
 int fd; //This is the socket file descriptor that will be used to identify the socket
@@ -10,7 +16,26 @@ int conn; //This is the connection file descriptor that will be used to distingu
 char message[100] = ""; //This array will store the messages that are sent by the server
 char *server_IP;
 u_short port;
+int opcion;
 
+char* scanInput()
+{
+  char *message = malloc(BUFFER_SIZE);
+  memset(message, 0, BUFFER_SIZE);
+  if (message == NULL){
+    printf("No memory for input.\n");
+    return NULL;
+  }
+  
+  fgets(message, BUFFER_SIZE, stdin);
+
+  if((strlen(message) > 0) && (message[strlen (message) - 1] == '\n'))
+  {
+    message[strlen (message) - 1] = '\0';
+  }
+
+  return message;
+}
 int main(int argc, char const *argv[]){
 	// manejo de ingreso de variables
 	if (argc < 2){
@@ -35,7 +60,7 @@ int main(int argc, char const *argv[]){
 	inet_pton(AF_INET, server_IP, &server.sin_addr); //This binds the client to localhost
 
 	connect(fd, (struct sockaddr *)&server, sizeof(server)); //This connects the client to the server.
-
+	  opcion=8;
 	  printf("----------------------------------------------------------\n");
 	  printf("------------------------Chat------------------------------\n");
 	  printf("----------------------------------------------------------\n");
@@ -87,7 +112,7 @@ int main(int argc, char const *argv[]){
 		       case 5: // Close connection
 		         break;
 						case 6:
-						printf("Ayuda\n", );
+						printf("Ayuda\n" );
 						case 7:
 						exit(0);
 		     }
