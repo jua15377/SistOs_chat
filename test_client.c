@@ -36,10 +36,61 @@ int main(int argc, char const *argv[]){
 
 	connect(fd, (struct sockaddr *)&server, sizeof(server)); //This connects the client to the server.
 
-	while(1) {
-	    printf("Enter a message: ");
-	    fgets(message, 100, stdin);
-	    send(fd, message, strlen(message), 0);
+	  printf("----------------------------------------------------------\n");
+	  printf("------------------------Chat------------------------------\n");
+	  printf("----------------------------------------------------------\n");
+	  printf("----------------------------------------------------------\n");
+	  printf("----------------------------------------------------------\n");
+	  printf("---------------------Bienvenido---------------------------\n");
+	  printf("----------------------------------------------------------\n");
+	  printf("\n");
+
+	while(opcion != 0) {
+	      printf("Ingrese una opcion:\n");
+		    printf("1.Chat un usuario\n");
+		    printf("2.Chat con todos\n");
+		    printf("3.Cambiar estado\n");
+		    printf("4.Usuarios e informacion\n");
+		    printf("5.Informacion en especifico de un usuario \n");
+		    printf("6. Ayuda\n");
+				 printf("7. Salir\n");
+				 opcion = atoi(scanInput());
+				 switch(opcion)
+		     {
+		       case 1: //  Chat with all
+		          printf("Ingrese un mensaje: ");
+	    				fgets(message, 100, stdin);
+	    				send(fd, message, strlen(message), 0);
+
+		         break;
+
+		       case 2: //  chat with a user
+
+		         printf("Ingrese el usuario al que enviara el mensaje: \n");
+
+		         break;
+
+		       case 3: // Change status
+		        printf("Ingrese el nuevo estado: \n");
+        		printf("0 -> active\n");
+        		printf("1 -> busy \n");
+        		printf("2 -> inactive\n");
+        		printf("Seleccione una opcion valida:\n");
+		         break;
+
+		       case 4: //  get Users status
+
+
+
+		         break;
+
+		       case 5: // Close connection
+		         break;
+						case 6:
+						printf("Ayuda\n", );
+						case 7:
+						exit(0);
+		     }
 	    //An extra breaking condition can be added here (to terminate the while loop)
 	}
 }
