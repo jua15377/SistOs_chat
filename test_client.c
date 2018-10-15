@@ -14,9 +14,42 @@ struct sockaddr_in server; //This is our main socket variable.
 int fd; //This is the socket file descriptor that will be used to identify the socket
 int conn; //This is the connection file descriptor that will be used to distinguish client connections.
 char message[100] = ""; //This array will store the messages that are sent by the server
+char usuario[100] = "";
+char final[150] = "";
 char *server_IP;
 u_short port;
 int opcion;
+
+typedef struct welcome {
+    char  host[50];
+    char  origin[50];
+		char user[50];
+} welcome;
+
+typedef struct messageI {
+    char  action[50];
+    char  from[50];
+		char  to[50];
+		char  message[100];
+} messageI;
+typedef struct messageAll {
+    char  action[50];
+    char  from[50];
+		char  message[100];
+} messageAll;
+typedef struct listUser {
+    char  action[50];
+} listUser;
+typedef struct listOneUser {
+    char  action[50];
+		char user[50];
+} listOneUser;
+
+typedef struct changeStatus {
+    char  action[50];
+		char user[50];
+		char status[50];
+} changeStatus;
 
 char* scanInput()
 {
@@ -26,7 +59,7 @@ char* scanInput()
     printf("No memory for input.\n");
     return NULL;
   }
-  
+
   fgets(message, BUFFER_SIZE, stdin);
 
   if((strlen(message) > 0) && (message[strlen (message) - 1] == '\n'))
@@ -39,16 +72,17 @@ char* scanInput()
 int main(int argc, char const *argv[]){
 	// manejo de ingreso de variables
 	if (argc < 2){
-		printf("Error: no se indico la ip y el numero de puerto\n");
+		printf("Error: no se indico la ip,el numero de puerto y el nombre de usuario\n");
 		exit(0);
 	}
-	else if(argc > 3){
+	else if(argc > 4){
 		printf("Demasiados argumentos\n");
 		exit(0);
 	}
 	else{
 		server_IP = argv[1];
 		port = (u_short) atoi(argv[2]);
+		usuario= argv[3];
 	}
 
 
@@ -85,7 +119,10 @@ int main(int argc, char const *argv[]){
 		       case 1: //  Chat with all
 		          printf("Ingrese un mensaje: ");
 	    				fgets(message, 100, stdin);
-	    				send(fd, message, strlen(message), 0);
+							strcpy(final,Usuario);
+							strcpy(final,":")
+							strcpy(final,message)
+	    				send(fd, final, strlen(final), 0);
 
 		         break;
 
