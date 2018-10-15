@@ -12,7 +12,7 @@ u_short port;
 
 void * start_server(){
 	// preparando conexion
-	printf("Preparando servidor...\n");
+	printf("Waiting for request...\n");
 	serv.sin_family = AF_INET; //protocolo de red
 	serv.sin_port = htons(port); //puesto a escuchar
 	serv.sin_addr.s_addr = INADDR_ANY;//ip locar
