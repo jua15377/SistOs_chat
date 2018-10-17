@@ -3,6 +3,7 @@
 #include <stdlib.h>
 #include <netinet/in.h> //For the AF_INET (Address Family)
 #include <string.h>
+#include <pthread.h>
 
 #define BUFFER_MSJ_SIZE 1024
 

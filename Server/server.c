@@ -3,7 +3,8 @@
 #include <stdlib.h>
 #include <netinet/in.h> 
 #include <string.h>
-#include "pthread.h"
+#include <pthread.h>
+#include <json.h>
 
 #define MAX_USER 10
 #define BUFFER_MSJ_SIZE 1024
@@ -17,6 +18,7 @@ u_short port;
 // a variable to see how many clients are connected
 int clients_count = 0;
 char client_address[CLIENT_ADDRESS_LENGTH];
+
 
 // store data from clients
 struct cliente
@@ -78,10 +80,11 @@ void * recive(void * socket) {
 }
 
 
-json_object handshakeHandler(char *client_request){
+struct json_object handshakeHandler(char *client_request){
 
 	//Creating json objects that will receive the data
 	struct json_object *handshake, *client_rq_host, *client_rq_origin, *client_rq_user;
+	struct json_object *response;
 
 	//Parsing client request string to json object
 	handshake = json_tokener_parse(client_request);
@@ -90,36 +93,36 @@ json_object handshakeHandler(char *client_request){
 	//1st param = source json object
 	//2nd param = key value to match json property
 	//third param = target json object to store data
-	json_object_object_get_ex(handshake, "host", &hclient_rq_host);
+	json_object_object_get_ex(handshake, "host", &client_rq_host);
 	json_object_object_get_ex(handshake, "origin", &client_rq_origin);
 	json_object_object_get_ex(handshake, "user", &client_rq_user);
 
 	//Get the string value of a json object 
-	const char *username =	json_object_get_string(client_rq_user)
+	const char *username =	json_object_get_string(client_rq_user);
 
 
-	struct json_object *response, *status;
+	
 
 	if(username != NULL){
 		//do validation
 
 		int i=0; //for cycle iterator
-		bool exists = false; //boolean variable to get if a user exists
+		int exists = 0; //boolean variable to get if a user exists
 
 		//for cycle to check if user exists
 		for ( i = 0; i < MAX_USER; ++i)
 	    {
 	    	char *name = connected_clients[i].alias;
 	    	if(name == username){
-	    		exists = true;
+	    		exists = 1;
 	    	}
 	    	//printf("conn dentro de for %d\n",connected_clients[i].connfd);
 	    }
 
-	    if(exists==true){
+	    if(exists == 1){
 	    	//User already exists
 	    	//Initializing response object properties
-	    	struct json_object *message;
+	    	struct json_object  *status, *message;
 	    	response = json_object_new_object();
 	    	status = json_object_new_string("ERROR");
 	    	message = json_object_new_string("Username already taken!");
@@ -133,9 +136,9 @@ json_object handshakeHandler(char *client_request){
 			return response;
 	    }else{
 	    	//User aproved
-	    	struct json_object *user, *user_id, *user_name, *user_status;
+	    	struct json_object *user, *user_id, *user_name, *user_status, *status;
 	    	//initializing user object properties
-	    	user_id = json_object_new_string("id") //insert id ger
+	    	user_id = json_object_new_string("id"); //insert id ger
 	    	user_name = json_object_new_string(username);
 	    	user_status = json_object_new_string("available");
 	    	//adding properties to user object
@@ -150,14 +153,14 @@ json_object handshakeHandler(char *client_request){
 
 	    	//adding properties to response object
 	    	json_object_object_add(response, "status", status);
-	    	json_object_object_add(response, "user", user)
+	    	json_object_object_add(response, "user", user);
 
 	    	return response;
 	    }
 	}else{
 		//Username is empty
 		//Initializing response object properties
-    	struct json_object *message;
+    	struct json_object *message, *status;
     	response = json_object_new_object();
     	status = json_object_new_string("ERROR");
     	message = json_object_new_string("Username is empty!");

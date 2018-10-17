@@ -1,5 +1,5 @@
 CC = gcc
-CFLAGS = -Wall -lpthread
+CFLAGS = -Wall -pthread
 CFLAGS += $(shell pkg-config --cflags json-c)
 LDFLAGS += $(shell pkg-config --libs json-c)
 objects = server.o
