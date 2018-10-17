@@ -77,6 +77,97 @@ void * recive(void * socket) {
     }
 }
 
+
+json_object handshakeHandler(char *client_request){
+
+	//Creating json objects that will receive the data
+	struct json_object *handshake, *client_rq_host, *client_rq_origin, *client_rq_user;
+
+	//Parsing client request string to json object
+	handshake = json_tokener_parse(client_request);
+
+	//Obtaining json components and adding it to other json component
+	//1st param = source json object
+	//2nd param = key value to match json property
+	//third param = target json object to store data
+	json_object_object_get_ex(handshake, "host", &hclient_rq_host);
+	json_object_object_get_ex(handshake, "origin", &client_rq_origin);
+	json_object_object_get_ex(handshake, "user", &client_rq_user);
+
+	//Get the string value of a json object 
+	const char *username =	json_object_get_string(client_rq_user)
+
+
+	struct json_object *response, *status;
+
+	if(username != NULL){
+		//do validation
+
+		int i=0; //for cycle iterator
+		bool exists = false; //boolean variable to get if a user exists
+
+		//for cycle to check if user exists
+		for ( i = 0; i < MAX_USER; ++i)
+	    {
+	    	char *name = connected_clients[i].alias;
+	    	if(name == username){
+	    		exists = true;
+	    	}
+	    	//printf("conn dentro de for %d\n",connected_clients[i].connfd);
+	    }
+
+	    if(exists==true){
+	    	//User already exists
+	    	//Initializing response object properties
+	    	struct json_object *message;
+	    	response = json_object_new_object();
+	    	status = json_object_new_string("ERROR");
+	    	message = json_object_new_string("Username already taken!");
+	    	//adding properties to response objects
+	    	//1st param = target object to store data
+	    	//2nd param = key to json_object
+	    	//3rd param = json object content
+	    	json_object_object_add(response, "status", status);
+			json_object_object_add(response, "message", message);
+
+			return response;
+	    }else{
+	    	//User aproved
+	    	struct json_object *user, *user_id, *user_name, *user_status;
+	    	//initializing user object properties
+	    	user_id = json_object_new_string("id") //insert id ger
+	    	user_name = json_object_new_string(username);
+	    	user_status = json_object_new_string("available");
+	    	//adding properties to user object
+	    	json_object_object_add(user, "id", user_id);
+			json_object_object_add(user, "name", user_name);
+			json_object_object_add(user, "status", user_status);
+
+
+			//Initializing response object properties
+	    	response = json_object_new_object();
+	    	status = json_object_new_string("OK");
+
+	    	//adding properties to response object
+	    	json_object_object_add(response, "status", status);
+	    	json_object_object_add(response, "user", user)
+
+	    	return response;
+	    }
+	}else{
+		//Username is empty
+		//Initializing response object properties
+    	struct json_object *message;
+    	response = json_object_new_object();
+    	status = json_object_new_string("ERROR");
+    	message = json_object_new_string("Username is empty!");
+    	//adding properties to response objects
+    	json_object_object_add(response, "status", status);
+		json_object_object_add(response, "message", message);
+		return response;
+	}
+}
+
 /* FUNCION MAIN*/
 int main(int argc, char const *argv[]){
 	//test pthread
@@ -93,6 +184,9 @@ int main(int argc, char const *argv[]){
 	start_server(); // calls the function to setup the server
 
 	// prepare the socket to listen for new connections
+
+
+
 	printf("espreando conexion\n");
 	listen(fd,MAX_USER); 
 
