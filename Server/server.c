@@ -98,9 +98,6 @@ struct json_object *  handshakeHandler(char *client_request){
 
 	//Get the string value of a json object 
 	const char *username =	json_object_get_string(client_rq_user);
-	printf("username %s\n", username);
-
-	
 
 	if(username != NULL){
 		//do validation
@@ -119,8 +116,6 @@ struct json_object *  handshakeHandler(char *client_request){
 	    }
 
 	    if(exists == 1){
-    		printf("usuairo ya existe\n");
-
 	    	//User already exists
 	    	//Initializing response object properties
 	    	struct json_object  *status, *message;
@@ -149,8 +144,6 @@ struct json_object *  handshakeHandler(char *client_request){
 	    	json_object_object_add(user, "id", user_id);
 			json_object_object_add(user, "name", user_name);
 			json_object_object_add(user, "status", user_status);
-			printf("exito\n");
-
 
 			//Initializing response object properties
 	    	response = json_object_new_object();
@@ -179,11 +172,8 @@ struct json_object *  handshakeHandler(char *client_request){
 /* FUNCION MAIN*/
 int main(int argc, char const *argv[]){
 	//test pthread
-	printf("llamando\n");
 	 struct json_object *respuesta = handshakeHandler(algo);
-	 printf("saliendo \n");
 	 const char *respuesta1 =	json_object_get_string(respuesta);
-	 printf(" HOLA %s\n", respuesta1);
 	pthread_t thread;
 
 	// Get port number
