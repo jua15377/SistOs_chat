@@ -80,7 +80,7 @@ void * recive(void * socket) {
 }
 
 
-struct json_object handshakeHandler(char *client_request){
+struct json_object *  handshakeHandler(char *client_request){
 
 	//Creating json objects that will receive the data
 	struct json_object *handshake, *client_rq_host, *client_rq_origin, *client_rq_user;
