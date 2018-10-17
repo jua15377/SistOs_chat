@@ -1,3 +1,5 @@
+#include <json.h>
+
 #include <stdio.h>
 #include <sys/socket.h> //For Sockets
 #include <stdlib.h>
@@ -21,7 +23,13 @@ typedef struct localInfo{
     int socket;
 }Info ;
 
-/*Recive data from server*/
+char * create_handshake(){
+
+}
+
+
+
+/*Recive data from server HERE SHOULD HANDEL the answers from server*/
 void * recive(void * threadData) {
     int socket_fd, response;
     char message[BUFFER_MSJ_SIZE];
@@ -51,20 +59,19 @@ void * recive(void * threadData) {
 
 int main(int argc, char const *argv[]){
 	// defina local variables
-
 	// manejo de ingreso de variables
-	if (argc > 5){
-		printf("Uso: client <username> <client_port> <server_ip> <server_port>\n");
+	if (argc != 4){
+		printf("Uso: client <username> <server_ip> <server_port>\n");
         exit(1);
 	}
 	else{
-		server_IP = argv[1];
-		port = (u_short) atoi(argv[2]);
+		server_IP = argv[2];
+		port = (u_short) atoi(argv[3]);
+
 	}
-	fd = socket(AF_INET, SOCK_STREAM, 0); // creates new socket
-	// this should be organized
-	server.sin_family = AF_INET;
-	server.sin_port = htons(port);
+	fd = socket(AF_INET, SOCK_STREAM, 0); // creates new local socket
+	server.sin_family = AF_INET;// set teh type of comunication
+	server.sin_port = htons(port); // set port to connect
 
 	inet_pton(AF_INET, server_IP, &server.sin_addr); //This binds the client to the server IP
 
@@ -73,11 +80,11 @@ int main(int argc, char const *argv[]){
 
 	//test
 	Info info;
-    info.userName = "you";
+    info.userName = argv[1];
     info.socket = fd;
     pthread_t thread;
     pthread_create(&thread, NULL, &recive, (void *) &info);
-    printf("Conectando Servidor: ");
+    printf("Conectando Servidor...");
 	while(1) {	
 	    fgets(message, 100, stdin);
 	    send(fd, message, BUFFER_MSJ_SIZE, 0);

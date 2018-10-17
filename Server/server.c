@@ -143,7 +143,7 @@ struct json_object *  handshakeHandler(char *client_request){
 	    	user = json_object_new_object();
 	    	user_id = json_object_new_string("id"); //insert id ger
 	    	user_name = json_object_new_string(username);
-	    	user_status = json_object_new_string("available");
+	    	user_status = json_object_new_string("active");
 	    	//adding properties to user object
 
 	    	json_object_object_add(user, "id", user_id);
