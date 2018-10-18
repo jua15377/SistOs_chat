@@ -1,5 +1,4 @@
 #include <json.h>
-
 #include <stdio.h>
 #include <sys/socket.h> //For Sockets
 #include <stdlib.h>
@@ -21,6 +20,7 @@ u_short port;
 typedef struct localInfo{
     char* userName;
     int socket;
+    char* id;
 }Info ;
 
 char * create_handshake(){
@@ -44,14 +44,14 @@ void * recive(void * threadData) {
         if (response == -1) {
         	// to be implemented
           //fprintf(stderr, "recv() failed: %s\n", strerror(errno));
-          break;
+          
         } else if (response == 0) {
               printf("\nPeer disconnected\n");
-              break;
         } else {
               printf("\nServer> %s", message);
-              printf("%s", prompt);
+              printf("%s>: ", prompt);
               fflush(stdout); // Make sure "User>" gets printed
+
           }
     }
 }
@@ -82,14 +82,16 @@ int main(int argc, char const *argv[]){
 	Info info;
     info.userName = argv[1];
     info.socket = fd;
+
     pthread_t thread;
     pthread_create(&thread, NULL, &recive, (void *) &info);
-    printf("Conectando Servidor...");
+    printf("Conectando Servidor...\n");
+   printf("%s>: ", argv[1]);
+
 	while(1) {	
-	    fgets(message, 100, stdin);
+	    fgets(message, BUFFER_MSJ_SIZE, stdin);
 	    send(fd, message, BUFFER_MSJ_SIZE, 0);
 	    memset(message, 0, BUFFER_MSJ_SIZE);
-	    
 	    //An extra breaking condition can be added here (to terminate the while loop)
 	}
 }

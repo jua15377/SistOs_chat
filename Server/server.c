@@ -381,9 +381,9 @@ void * recive(void * arguments ) {
     // Print received message
     //printf("thread 4\n");
     while(1) {
-        response = recvfrom(socket_fd, message, BUFFER_MSJ_SIZE, 0, NULL, NULL);----------
+        response = recvfrom(socket_fd, message, BUFFER_MSJ_SIZE, 0, NULL, NULL);
         if (response) {
-           printf("%s", message); // for debugging
+           printf("if response %s", message); // for debugging
            send_message(connected_clients[id].connfd, &connected_clients[id].socket, message);
      //        // byr
      //        if (strcmp(message, 'BYE')==0){
@@ -461,13 +461,13 @@ int main(int argc, char const *argv[]){
 		connected_clients[clients_count].socket = cl_socket;
 		connected_clients[clients_count].fd = cl_socket_fd;
 		connected_clients[clients_count].connfd = conn;
-		clients_count ++;
 		printf("-> users connected: %d\n", clients_count);
 		//the conn fd and coun aka id is sent to the new thread
 		arguments.arg1 = conn;
 		arguments.arg2 = clients_count;
+		clients_count ++;
 		pthread_create(&thread, NULL, &recive, (void *) &arguments);
-    	
+
 		
 	}
 	return 0;
