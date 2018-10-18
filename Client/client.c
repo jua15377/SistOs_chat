@@ -210,8 +210,7 @@ printf("----------------------------------------------------------\n");
         printf("3.Cambiar estado\n");
         printf("4.Usuarios e informacion\n");
         printf("5.Informacion en especifico de un usuario \n");
-        printf("6. Ayuda\n");
-         printf("7. Salir\n");
+         printf("6. Salir\n");
           
          opcion = atoi(scanInput());
          switch(opcion)
@@ -243,11 +242,12 @@ printf("----------------------------------------------------------\n");
              action = json_object_new_string("CHANGE_STATUS");
              user = json_object_new_string(info.userName);
              status = json_object_new_string(LastcharDel(stat));
-    json_object_object_add(change, "action", action);
-    json_object_object_add(change, "user", user);
-    json_object_object_add(change, "status", status);
-    char *respuesta2 = json_object_get_string(change);
-    printf("%s \n",respuesta2);
+            json_object_object_add(change, "action", action);
+            json_object_object_add(change, "user", user);
+            json_object_object_add(change, "status", status);
+            char *respuesta2 = json_object_get_string(change);
+            printf("%s \n",respuesta2);
+            send(fd, respuesta2, BUFFER_MSJ_SIZE, 0);
 
 
              break;
@@ -257,11 +257,11 @@ printf("----------------------------------------------------------\n");
 
              break;
 
-           case 5: // Close connection
+           case 5: // get info of users
              break;
             case 6:
-            printf("Ayuda\n" );
-            case 7:
+            send(fd, "BYE", BUFFER_MSJ_SIZE, 0);
+            printf("Gracias por utilizar el chat\n" );
             exit(0);
          }
 	    
