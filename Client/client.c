@@ -119,11 +119,19 @@ void * recive(void * threadData) {
               printf("\nPeer disconnected\n");
               break;
         } else {
-              printf("\nServer> %s", message);
+              int comp;
+              comp = strncmp(message,"BYE",2);
+              if (comp!=0){
+                    printf("\nServer> %s", message);
               printf("\n");
               //printf("%s", prompt);
               printf("Ingrese una opcion:\n");
               fflush(stdout); // Make sure "User>" gets printed
+          
+              }
+              else{
+
+              }
           }
     }
 }
@@ -218,8 +226,8 @@ printf("----------------------------------------------------------\n");
            case 1: //  Chat with all
               printf("%s","Ingrese su mensaje: " );
               fgets(message, 100, stdin);
-      send(fd, message, BUFFER_MSJ_SIZE, 0);
-      memset(message, 0, BUFFER_MSJ_SIZE);
+              send(fd, message, BUFFER_MSJ_SIZE, 0);
+              memset(message, 0, BUFFER_MSJ_SIZE);
       //printf(info.userName);
              break;
 
