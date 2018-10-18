@@ -87,7 +87,7 @@ struct json_object *  handshakeHandler(char *client_request){
 	struct json_object *response;
 	//Parsing client request string to json object
 	handshake = json_tokener_parse(client_request);
-
+	//printf("En handshakeHandler")
 	//Obtaining json components and adding it to other json component
 	//1st param = source json object
 	//2nd param = key value to match json property

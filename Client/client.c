@@ -16,7 +16,7 @@ char message[BUFFER_MSJ_SIZE] = ""; //This array will store the messages that ar
 char message2[BUFFER_MSJ_SIZE] = "";
 char *server_IP;
 u_short port;
-
+int opcion;
 
 typedef struct localInfo{
     char* userName;
@@ -28,7 +28,24 @@ char * create_handshake(){
 }
 
 
+char* scanInput()
+{
+  char *message = malloc(BUFFER_MSJ_SIZE );
+  memset(message, 0, BUFFER_MSJ_SIZE );
+  if (message == NULL){
+    printf("No memory for input.\n");
+    return NULL;
+  }
 
+  fgets(message, BUFFER_MSJ_SIZE , stdin);
+
+  if((strlen(message) > 0) && (message[strlen (message) - 1] == '\n'))
+  {
+    message[strlen (message) - 1] = '\0';
+  }
+
+  return message;
+}
 /*Recive data from server HERE SHOULD HANDEL the answers from server*/
 void * recive(void * threadData) {
     int socket_fd, response;
@@ -77,7 +94,15 @@ int main(int argc, char const *argv[]){
 
 	connect(fd, (struct sockaddr *)&server, sizeof(server)); //This connects the client to the server.
 	//TODO handle exceptions
-
+opcion=8;
+printf("----------------------------------------------------------\n");
+    printf("------------------------Chat------------------------------\n");
+    printf("----------------------------------------------------------\n");
+    printf("----------------------------------------------------------\n");
+    printf("----------------------------------------------------------\n");
+    printf("---------------------Bienvenido---------------------------\n");
+    printf("----------------------------------------------------------\n");
+    printf("\n");
 	//test
 	Info info;
     info.userName = argv[1];
@@ -85,10 +110,56 @@ int main(int argc, char const *argv[]){
     pthread_t thread;
     pthread_create(&thread, NULL, &recive, (void *) &info);
     printf("Conectando Servidor...");
+
 	while(1) {	
-	    fgets(message, 100, stdin);
-	    send(fd, message, BUFFER_MSJ_SIZE, 0);
-	    memset(message, 0, BUFFER_MSJ_SIZE);
+
+ printf("Ingrese una opcion:\n");
+        printf("1.Chat con todos\n");
+        printf("2.Chat con un usuario\n");
+        printf("3.Cambiar estado\n");
+        printf("4.Usuarios e informacion\n");
+        printf("5.Informacion en especifico de un usuario \n");
+        printf("6. Ayuda\n");
+         printf("7. Salir\n");
+         opcion = atoi(scanInput());
+         switch(opcion)
+         {
+           case 1: //  Chat with all
+              printf("%s","Ingrese su mensaje: " );
+              fgets(message, 100, stdin);
+      send(fd, message, BUFFER_MSJ_SIZE, 0);
+      memset(message, 0, BUFFER_MSJ_SIZE);
+      //printf(info.userName);
+             break;
+
+           case 2: //  chat with a user
+
+             printf("Ingrese el usuario al que enviara el mensaje: \n");
+
+             break;
+
+           case 3: // Change status
+            printf("Ingrese el nuevo estado: \n");
+            printf("0 -> active\n");
+            printf("1 -> busy \n");
+            printf("2 -> inactive\n");
+            printf("Seleccione una opcion valida:\n");
+             break;
+
+           case 4: //  get Users status
+
+
+
+             break;
+
+           case 5: // Close connection
+             break;
+            case 6:
+            printf("Ayuda\n" );
+            case 7:
+            exit(0);
+         }
+	    
 	    
 	    //An extra breaking condition can be added here (to terminate the while loop)
 	}
