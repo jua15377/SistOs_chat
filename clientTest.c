@@ -11,6 +11,7 @@
 #include<unistd.h>    //close
 
 #define BUFFER_MSJ_SIZE 1024
+#define SIZE_STATUS 20
 
 struct sockaddr_in server; //This is our main socket variable.
 int fd; //This is the socket file descriptor that will be used to identify the socket
@@ -20,7 +21,7 @@ char message2[BUFFER_MSJ_SIZE] = "";
 char *server_IP;
 u_short port;
 int opcion;
-char stat[BUFFER_MSJ_SIZE] = "";
+char stat[SIZE_STATUS];
 
 char *mHandShake = "{\"host\":\"";
 typedef struct localInfo{
@@ -28,10 +29,11 @@ typedef struct localInfo{
     int socket;
 }Info ;
 
+char* LastcharDel(char* name);
 
 /*void * sendHandShake(){
-
-
+      
+      
       //send(fd, message, BUFFER_MSJ_SIZE, 0);
       //memset(message, 0, BUFFER_MSJ_SIZE);
 }*/
@@ -39,31 +41,31 @@ char* getIp(){
 
     const char* google_dns_server = "8.8.8.8";
     int dns_port = 53;
-
+     
     struct sockaddr_in serv;
-
+     
     int sock = socket ( AF_INET, SOCK_DGRAM, 0);
-
+     
     //Socket could not be created
     if(sock < 0)
     {
         perror("Socket error");
     }
-
+     
     memset( &serv, 0, sizeof(serv) );
     serv.sin_family = AF_INET;
     serv.sin_addr.s_addr = inet_addr( google_dns_server );
     serv.sin_port = htons( dns_port );
-
+ 
     int err = connect( sock , (const struct sockaddr*) &serv , sizeof(serv) );
-
+     
     struct sockaddr_in name;
     socklen_t namelen = sizeof(name);
     err = getsockname(sock, (struct sockaddr*) &name, &namelen);
-
+         
     char buffer[100];
     const char* p = inet_ntop(AF_INET, &name.sin_addr, buffer, 100);
-
+         
     if(p != NULL)
     {
         //printf("Local ip is : %s \n" , buffer);
@@ -75,9 +77,9 @@ char* getIp(){
         //Some error
         printf ("Error number : %d . Error message : %s \n" , errno , strerror(errno));
     }
-
-
-
+ 
+   
+    
  }
 char* scanInput()
 {
@@ -117,13 +119,33 @@ void * recive(void * threadData) {
               printf("\nPeer disconnected\n");
               break;
         } else {
-              printf("\nServer> %s", message);
+              int comp;
+              comp = strncmp(message,"BYE",2);
+              if (comp!=0){
+                    printf("\nServer> %s", message);
               printf("\n");
               //printf("%s", prompt);
               printf("Ingrese una opcion:\n");
               fflush(stdout); // Make sure "User>" gets printed
+          
+              }
+              else{
+
+              }
           }
     }
+}
+
+char* LastcharDel(char* name)
+{
+    int i = 0;
+    while(name[i] != '\0')
+    {
+        i++;
+         
+    }
+    name[i-1] = '\0';
+    return name;
 }
 
 
@@ -173,7 +195,7 @@ printf("----------------------------------------------------------\n");
     json_object_object_add(request, "host", host);
     json_object_object_add(request, "origin", origin);
     json_object_object_add(request, "user", user);
-
+    
     //char *respuesta1 =  json_object_get_string(request);
     printf("%s\n","HolaHola" );
     char *respuesta1 = json_object_get_string(request);
@@ -189,24 +211,23 @@ printf("----------------------------------------------------------\n");
     send(fd, respuesta1, BUFFER_MSJ_SIZE, 0);
     //memset(respuesta1, 0, BUFFER_MSJ_SIZE);
 
-	while(1) {
+	while(1) {	
 
         printf("1.Chat con todos\n");
         printf("2.Chat con un usuario\n");
         printf("3.Cambiar estado\n");
         printf("4.Usuarios e informacion\n");
         printf("5.Informacion en especifico de un usuario \n");
-        printf("6. Ayuda\n");
-         printf("7. Salir\n");
-
+         printf("6. Salir\n");
+          
          opcion = atoi(scanInput());
          switch(opcion)
          {
            case 1: //  Chat with all
               printf("%s","Ingrese su mensaje: " );
               fgets(message, 100, stdin);
-      send(fd, message, BUFFER_MSJ_SIZE, 0);
-      memset(message, 0, BUFFER_MSJ_SIZE);
+              send(fd, message, BUFFER_MSJ_SIZE, 0);
+              memset(message, 0, BUFFER_MSJ_SIZE);
       //printf(info.userName);
              break;
 
@@ -228,30 +249,31 @@ printf("----------------------------------------------------------\n");
              change = json_object_new_object();
              action = json_object_new_string("CHANGE_STATUS");
              user = json_object_new_string(info.userName);
-             status = json_object_new_string(stat);
-    json_object_object_add(change, "action", action);
-    json_object_object_add(change, "user", user);
-    json_object_object_add(change, "status", status);
-    char *respuesta2 = json_object_get_string(change);
-    printf("%s \n",respuesta2);
+             status = json_object_new_string(LastcharDel(stat));
+            json_object_object_add(change, "action", action);
+            json_object_object_add(change, "user", user);
+            json_object_object_add(change, "status", status);
+            char *respuesta2 = json_object_get_string(change);
+            printf("%s \n",respuesta2);
+            send(fd, respuesta2, BUFFER_MSJ_SIZE, 0);
 
 
              break;
 
            case 4: //  get Users status
-
+          
 
              break;
 
-           case 5: // Close connection
+           case 5: // get info of users
              break;
             case 6:
-            printf("Ayuda\n" );
-            case 7:
+            send(fd, "BYE", BUFFER_MSJ_SIZE, 0);
+            printf("Gracias por utilizar el chat\n" );
             exit(0);
          }
-
-
+	    
+	    
 	    //An extra breaking condition can be added here (to terminate the while loop)
 	}
 }
