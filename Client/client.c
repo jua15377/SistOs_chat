@@ -20,6 +20,7 @@ char message2[BUFFER_MSJ_SIZE] = "";
 char *server_IP;
 u_short port;
 int opcion;
+char stat[BUFFER_MSJ_SIZE] = "";
 
 char *mHandShake = "{\"host\":\"";
 typedef struct localInfo{
@@ -217,15 +218,28 @@ printf("----------------------------------------------------------\n");
 
            case 3: // Change status
             printf("Ingrese el nuevo estado: \n");
-            printf("0 -> active\n");
-            printf("1 -> busy \n");
-            printf("2 -> inactive\n");
-            printf("Seleccione una opcion valida:\n");
+            printf("active\n");
+            printf("busy \n");
+            printf("inactive\n");
+            fgets(stat, 100, stdin);
+            printf("%s\n", stat);
+             struct json_object *change;
+             struct json_object  *action, *user, *status;
+             change = json_object_new_object();
+             action = json_object_new_string("CHANGE_STATUS");
+             user = json_object_new_string(info.userName);
+             status = json_object_new_string(stat);
+    json_object_object_add(change, "action", action);
+    json_object_object_add(change, "user", user);
+    json_object_object_add(change, "status", status);
+    char *respuesta2 = json_object_get_string(change);
+    printf("%s \n",respuesta2);
+
+
              break;
 
            case 4: //  get Users status
-
-
+          
 
              break;
 
