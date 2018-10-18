@@ -330,7 +330,9 @@ struct json_object *  handshakeHandler(char *client_request, int id){
 	    	struct json_object *user, *user_id, *user_name, *user_status, *status;
 	    	//initializing user object properties
 	    	user = json_object_new_object();
-	    	user_id = json_object_new_string("id"); //insert id ger
+	    	printf("ID = %d\n", id);
+	    	printf("ID = %s\n", connected_clients[i].uid);
+	    	user_id = json_object_new_string(connected_clients[id].uid); //insert id ger
 	    	user_name = json_object_new_string(username);
 	    	user_status = json_object_new_string("active");
 	    	//adding properties to user object
@@ -379,12 +381,17 @@ void * recive(void * arguments ) {
     id = (int) arg->arg2;
     printf("%d, %d\n", socket_fd,id);
     // Print received message
-    //printf("thread 4\n");
+    printf("thread 4\n");
     while(1) {
         response = recvfrom(socket_fd, message, BUFFER_MSJ_SIZE, 0, NULL, NULL);
         if (response) {
            printf("if response %s", message); // for debugging
            send_message(connected_clients[id].connfd, &connected_clients[id].socket, message);
+           json_object *res = handshakeHandler(message, id);
+           //ress contains hanshakeHandler response 
+           char *ress = json_object_get_string(res);
+           send_message(connected_clients[id].connfd, &connected_clients[id].socket, ress);
+           //printf("Respuesta del handshake: %s\n", ress);
      //        // byr
      //        if (strcmp(message, 'BYE')==0){
      //        	// TODO: handle close conntion
@@ -461,6 +468,9 @@ int main(int argc, char const *argv[]){
 		connected_clients[clients_count].socket = cl_socket;
 		connected_clients[clients_count].fd = cl_socket_fd;
 		connected_clients[clients_count].connfd = conn;
+		sprintf(connected_clients[clients_count].uid, "%d", clients_count);
+
+		//connected_clients[clients_count].uid = clients_count;
 		printf("-> users connected: %d\n", clients_count);
 		//the conn fd and coun aka id is sent to the new thread
 		arguments.arg1 = conn;

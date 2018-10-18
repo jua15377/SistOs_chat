@@ -112,7 +112,7 @@ void * recive(void * threadData) {
     while(1) {
         response = recvfrom(socket_fd, message, BUFFER_MSJ_SIZE, 0, NULL, NULL);
         if (response == -1) {
-        	// to be implemented
+          // to be implemented
           //fprintf(stderr, "recv() failed: %s\n", strerror(errno));
           break;
         } else if (response == 0) {
@@ -150,25 +150,25 @@ char* LastcharDel(char* name)
 
 
 int main(int argc, char const *argv[]){
-	// defina local variables
-	// manejo de ingreso de variables
-	if (argc != 4){
-		printf("Uso: client <username> <server_ip> <server_port>\n");
+  // defina local variables
+  // manejo de ingreso de variables
+  if (argc != 4){
+    printf("Uso: client <username> <server_ip> <server_port>\n");
         exit(1);
-	}
-	else{
-		server_IP = argv[2];
-		port = (u_short) atoi(argv[3]);
+  }
+  else{
+    server_IP = argv[2];
+    port = (u_short) atoi(argv[3]);
 
-	}
-	fd = socket(AF_INET, SOCK_STREAM, 0); // creates new local socket
-	server.sin_family = AF_INET;// set teh type of comunication
-	server.sin_port = htons(port); // set port to connect
+  }
+  fd = socket(AF_INET, SOCK_STREAM, 0); // creates new local socket
+  server.sin_family = AF_INET;// set teh type of comunication
+  server.sin_port = htons(port); // set port to connect
 
-	inet_pton(AF_INET, server_IP, &server.sin_addr); //This binds the client to the server IP
+  inet_pton(AF_INET, server_IP, &server.sin_addr); //This binds the client to the server IP
 
-	connect(fd, (struct sockaddr *)&server, sizeof(server)); //This connects the client to the server.
-	//TODO handle exceptions
+  connect(fd, (struct sockaddr *)&server, sizeof(server)); //This connects the client to the server.
+  //TODO handle exceptions
 opcion=8;
 printf("----------------------------------------------------------\n");
     printf("------------------------Chat------------------------------\n");
@@ -178,8 +178,8 @@ printf("----------------------------------------------------------\n");
     printf("---------------------Bienvenido---------------------------\n");
     printf("----------------------------------------------------------\n");
     printf("\n");
-	//test
-	Info info;
+  //test
+  Info info;
     info.userName = argv[1];
     info.socket = fd;
 
@@ -211,7 +211,7 @@ printf("----------------------------------------------------------\n");
     send(fd, respuesta1, BUFFER_MSJ_SIZE, 0);
     //memset(respuesta1, 0, BUFFER_MSJ_SIZE);
 
-	while(1) {	
+  while(1) {  
 
         printf("1.Chat con todos\n");
         printf("2.Chat con un usuario\n");
@@ -272,8 +272,8 @@ printf("----------------------------------------------------------\n");
             printf("Gracias por utilizar el chat\n" );
             exit(0);
          }
-	    
-	    
-	    //An extra breaking condition can be added here (to terminate the while loop)
-	}
+      
+      
+      //An extra breaking condition can be added here (to terminate the while loop)
+  }
 }
