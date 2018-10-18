@@ -6,6 +6,9 @@
 #include <netinet/in.h> //For the AF_INET (Address Family)
 #include <string.h>
 #include <pthread.h>
+#include<errno.h> //errno
+#include<arpa/inet.h> //getsockname
+#include<unistd.h>    //close
 
 #define BUFFER_MSJ_SIZE 1024
 
@@ -18,16 +21,63 @@ char *server_IP;
 u_short port;
 int opcion;
 
+char *mHandShake = "{\"host\":\"";
 typedef struct localInfo{
     char* userName;
     int socket;
 }Info ;
 
-char * create_handshake(){
 
-}
+/*void * sendHandShake(){
+      
+      
+      //send(fd, message, BUFFER_MSJ_SIZE, 0);
+      //memset(message, 0, BUFFER_MSJ_SIZE);
+}*/
+char* getIp(){
 
-
+    const char* google_dns_server = "8.8.8.8";
+    int dns_port = 53;
+     
+    struct sockaddr_in serv;
+     
+    int sock = socket ( AF_INET, SOCK_DGRAM, 0);
+     
+    //Socket could not be created
+    if(sock < 0)
+    {
+        perror("Socket error");
+    }
+     
+    memset( &serv, 0, sizeof(serv) );
+    serv.sin_family = AF_INET;
+    serv.sin_addr.s_addr = inet_addr( google_dns_server );
+    serv.sin_port = htons( dns_port );
+ 
+    int err = connect( sock , (const struct sockaddr*) &serv , sizeof(serv) );
+     
+    struct sockaddr_in name;
+    socklen_t namelen = sizeof(name);
+    err = getsockname(sock, (struct sockaddr*) &name, &namelen);
+         
+    char buffer[100];
+    const char* p = inet_ntop(AF_INET, &name.sin_addr, buffer, 100);
+         
+    if(p != NULL)
+    {
+        //printf("Local ip is : %s \n" , buffer);
+       close(sock);
+        return buffer;
+    }
+    else
+    {
+        //Some error
+        printf ("Error number : %d . Error message : %s \n" , errno , strerror(errno));
+    }
+ 
+   
+    
+ }
 char* scanInput()
 {
   char *message = malloc(BUFFER_MSJ_SIZE );
@@ -67,7 +117,9 @@ void * recive(void * threadData) {
               break;
         } else {
               printf("\nServer> %s", message);
-              printf("%s", prompt);
+              printf("\n");
+              //printf("%s", prompt);
+              printf("Ingrese una opcion:\n");
               fflush(stdout); // Make sure "User>" gets printed
           }
     }
@@ -107,13 +159,37 @@ printf("----------------------------------------------------------\n");
 	Info info;
     info.userName = argv[1];
     info.socket = fd;
+
+    struct json_object *request;
+
+    struct json_object  *host, *origin, *user;
+    request = json_object_new_object();
+    host = json_object_new_string(server_IP);
+    printf("Local ipp is : %s \n" , getIp());
+    origin = json_object_new_string(getIp());
+    user = json_object_new_string(info.userName);
+
+    json_object_object_add(request, "host", host);
+    json_object_object_add(request, "origin", origin);
+    json_object_object_add(request, "user", user);
+    
+    //char *respuesta1 =  json_object_get_string(request);
+    printf("%s\n","HolaHola" );
+    char *respuesta1 = json_object_get_string(request);
+    printf("Local ipp is : %s \n" , getIp());
+    printf("%s \n",respuesta1);
+    printf("\n");
+    //send(fd, respuesta1, BUFFER_MSJ_SIZE, 0);
+      //memset(respuesta1, 0, BUFFER_MSJ_SIZE);
+
     pthread_t thread;
     pthread_create(&thread, NULL, &recive, (void *) &info);
-    printf("Conectando Servidor...");
+    printf("Conectando Servidor ...\n");
+    send(fd, respuesta1, BUFFER_MSJ_SIZE, 0);
+    //memset(respuesta1, 0, BUFFER_MSJ_SIZE);
 
 	while(1) {	
 
- printf("Ingrese una opcion:\n");
         printf("1.Chat con todos\n");
         printf("2.Chat con un usuario\n");
         printf("3.Cambiar estado\n");
@@ -121,6 +197,7 @@ printf("----------------------------------------------------------\n");
         printf("5.Informacion en especifico de un usuario \n");
         printf("6. Ayuda\n");
          printf("7. Salir\n");
+          
          opcion = atoi(scanInput());
          switch(opcion)
          {
