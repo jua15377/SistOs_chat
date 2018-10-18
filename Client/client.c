@@ -11,6 +11,7 @@
 #include<unistd.h>    //close
 
 #define BUFFER_MSJ_SIZE 1024
+#define SIZE_STATUS 20
 
 struct sockaddr_in server; //This is our main socket variable.
 int fd; //This is the socket file descriptor that will be used to identify the socket
@@ -20,7 +21,7 @@ char message2[BUFFER_MSJ_SIZE] = "";
 char *server_IP;
 u_short port;
 int opcion;
-char stat[BUFFER_MSJ_SIZE] = "";
+char stat[SIZE_STATUS];
 
 char *mHandShake = "{\"host\":\"";
 typedef struct localInfo{
@@ -28,6 +29,7 @@ typedef struct localInfo{
     int socket;
 }Info ;
 
+char* LastcharDel(char* name);
 
 /*void * sendHandShake(){
       
@@ -124,6 +126,18 @@ void * recive(void * threadData) {
               fflush(stdout); // Make sure "User>" gets printed
           }
     }
+}
+
+char* LastcharDel(char* name)
+{
+    int i = 0;
+    while(name[i] != '\0')
+    {
+        i++;
+         
+    }
+    name[i-1] = '\0';
+    return name;
 }
 
 
@@ -228,7 +242,7 @@ printf("----------------------------------------------------------\n");
              change = json_object_new_object();
              action = json_object_new_string("CHANGE_STATUS");
              user = json_object_new_string(info.userName);
-             status = json_object_new_string(stat);
+             status = json_object_new_string(LastcharDel(stat));
     json_object_object_add(change, "action", action);
     json_object_object_add(change, "user", user);
     json_object_object_add(change, "status", status);
