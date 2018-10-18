@@ -22,20 +22,26 @@ char client_address[CLIENT_ADDRESS_LENGTH];
 char *algo = "{\"host\": \"192.168.1.2\",\"origin\": \"192.168.1.3\",\"user\": \"ALVARITO\"}";
 
 // store data from clients
-struct cliente
+typedef struct cliente_info
 {	
 	struct sockaddr_in socket;// the clien socjet
 	int fd; // file descriptor from the above socket
 	int connfd; //the file descriptor generated from the new connection
-	int enable; // the status of the client
 	char alias[50]; // the alias/nickname asseigned to by the client
-	int status;  // this shold save the state of the client
-	int uid;	// an Id to identify each client
+	char status[10];  // this shold save the state of the client
+	char uid[5];	// an Id to identify each client
+	char ip[20];
+}Cliente;
+
+// to share data between threads
+struct arg_struct {
+    int arg1;
+    int arg2;
 };
 
-struct cliente connected_clients[MAX_USER]; // this array will store all the connected client
+Cliente connected_clients[MAX_USER]; // this array will store all the connected client
 
-/* SE CREA EL SERVIDOR */
+/* THE SERVER IS CREATED */
 
 void * start_server(){
 	// preparando conexion
@@ -56,27 +62,45 @@ void * start_server(){
 */
 void * send_message(int new_socket_fd, struct sockaddr *cl_addr, void * message) {
 	sendto(new_socket_fd, message, 100, 0, (struct sockaddr *) &cl_addr, sizeof cl_addr);
+	return;
 }
 
-/*Recibe message*/
-void * recive(void * socket) {
-    int socket_fd, response;
-    char message[BUFFER_MSJ_SIZE];
-    memset(message, 0, BUFFER_MSJ_SIZE); // Clear message buffer
-    socket_fd = (int) socket;
+void succesful_reg(int id){
+	char *message;
+	// constructing json
+	/*
+	{
+  	"action": "USER_CONNECTED",
+	  	"user": {
+			"id": "ASdbjkxclz+asd?",
+			"name": "<nombre>",
+			"status": "<status>"
+	 	}
+	}
+	**/
+	struct json_object *parent, *action, *user, *the_id, *name, *status;
+	parent = json_object_new_object();
+	user = json_object_new_object();
+	action = json_object_new_string("USER_CONNECTED");
+	the_id = json_object_new_string(connected_clients[id].uid);
+	name = json_object_new_string(connected_clients[id].alias);
+	status = json_object_new_string(connected_clients[id].status);
+	//adding properties to response objects
+	//1st param = target object to store data
+	//2nd param = key to json_object
+	//3rd param = json object content
+	json_object_object_add(user, "id", the_id);
+	json_object_object_add(user, "name", name);
+	json_object_object_add(user, "status", status);
+	json_object_object_add(parent, "action", action);
+	json_object_object_add(parent, "user", user);
+	message = json_object_get_string(parent);
 
-    // Print received message
-    while(1) {
-        response = recvfrom(socket_fd, message, BUFFER_MSJ_SIZE, 0, NULL, NULL);
-        if (response) {
-            printf("%s", message);
-        	int i = 0;
-            for ( i = 0; i < MAX_USER; ++i)
-            {
-            	send_message(connected_clients[i].connfd, &connected_clients[i].socket, message);
-            	printf("conn dentro de for %d\n",connected_clients[i].connfd);
-            }
-        }
+	int i = 0;
+    for ( i = 0; i < MAX_USER; ++i)
+    {
+    	send_message(connected_clients[i].connfd, &connected_clients[i].socket, message);
+    	printf("->Sending succesful to: %s\n", connected_clients[i].alias);
     }
 }
 
@@ -181,7 +205,7 @@ void actionHandler(char *action_request){
 				//User is defined so it returns an specific user.
 				printf("CONTENIDO DE USER: %s\n", rq_usr_content);
 				int i = 0;
-				for(int i = 0; i< MAX_USER; i++){
+				for(i = 0; i< MAX_USER; i++){
 					if(strcmp(rq_usr_content, connected_clients[i].uid)==0){
 						struct json_object *user, *name, *status;
 						user = json_object_new_object();
@@ -223,7 +247,7 @@ void actionHandler(char *action_request){
 
 		//creating user value
 		int i = 0;
-		for(int i = 0; i< MAX_USER; i++){
+		for(i = 0; i< MAX_USER; i++){
 			if(strcmp(request_user_id_string, connected_clients[i].uid)==0){
 				response_user = json_object_new_object();
 
@@ -250,7 +274,7 @@ void actionHandler(char *action_request){
 }
 
 
-struct json_object *  handshakeHandler(char *client_request){
+struct json_object *  handshakeHandler(char *client_request, int id){
 	//Creating json objects that will receive the data
 	struct json_object *handshake, *client_rq_host, *client_rq_origin, *client_rq_user;
 	struct json_object *response;
@@ -267,6 +291,7 @@ struct json_object *  handshakeHandler(char *client_request){
 
 	//Get the string value of a json object 
 	const char *username =	json_object_get_string(client_rq_user);
+	const char *origin_ip =	json_object_get_string(client_rq_user);
 
 	if(username != NULL){
 		//do validation
@@ -321,10 +346,12 @@ struct json_object *  handshakeHandler(char *client_request){
 	    	//adding properties to response object
 	    	json_object_object_add(response, "status", status);
 	    	json_object_object_add(response, "user", user);
-
+	    	succesful_reg(id);
 	    	return response;
 	    }
-	}else{
+	}
+	// deprecated
+	else{
 		//Username is empty
 		//Initializing response object properties
     	struct json_object *message, *status;
@@ -338,6 +365,57 @@ struct json_object *  handshakeHandler(char *client_request){
 	}
 }
 
+/*Recibe message*/
+void * recive(void * arguments ) {
+	//printf("thread\n");
+	struct arg_struct *arg = arguments;
+	//printf("thread 2\n");
+
+    int socket_fd, response, id;
+    char *message[BUFFER_MSJ_SIZE];
+    memset(message, 0, BUFFER_MSJ_SIZE); // Clear message buffer
+    //printf("thread 3\n");
+    socket_fd = (int) arg->arg1;
+    id = (int) arg->arg2;
+    printf("%d, %d\n", socket_fd,id);
+    // Print received message
+    //printf("thread 4\n");
+    while(1) {
+        response = recvfrom(socket_fd, message, BUFFER_MSJ_SIZE, 0, NULL, NULL);----------
+        if (response) {
+           printf("%s", message); // for debugging
+           send_message(connected_clients[id].connfd, &connected_clients[id].socket, message);
+     //        // byr
+     //        if (strcmp(message, 'BYE')==0){
+     //        	// TODO: handle close conntion
+     //        	printf("Bye... \n");
+     //        }
+     //        else{
+     //        	// handshake
+     //        	printf("thread 6 handshake %d\n");
+
+     //        	if (strstr(message, "origin"!=NULL)){
+     //        		struct json_object *respuesta = handshakeHandler(message, id);
+     //        		const char *resp = json_object_get_string(respuesta);
+     //        		send_message(connected_clients[id].connfd, &connected_clients[id].socket, resp);
+					// printf("%s",resp); 
+     //        	}
+     //        	else if(strstr(message, "acction")!=NULL){
+     //        		// handle acctions'
+     //        		printf("acction \n");
+
+     //        	}
+     //        	else{
+     //        		send_message(connected_clients[id].connfd, &connected_clients[id].socket, message);
+     //        		printf("else... \n");
+     //        	}
+     //       }
+        	
+        }
+    }
+}
+
+
 /* FUNCION MAIN*/
 int main(int argc, char const *argv[]){
 
@@ -350,10 +428,11 @@ int main(int argc, char const *argv[]){
 	//actionHandler(prb_list_usr);
 	//actionHandler(prb_list_usr2);
 
-	//test pthread
-	struct json_object *respuesta = handshakeHandler(algo);
-	const char *respuesta1 =	json_object_get_string(respuesta);
+	//parameter
+	// struct json_object *respuesta = handshakeHandler(algo, 5);
+	// const char *respuesta1 =	json_object_get_string(respuesta);
 	pthread_t thread;
+	struct arg_struct arguments;
 
 	// Get port number
 	if (argc < 2 | argc > 2 ){
@@ -366,39 +445,30 @@ int main(int argc, char const *argv[]){
 	start_server(); // calls the function to setup the server
 
 	// prepare the socket to listen for new connections
-
-
-
 	printf("espreando conexion\n");
 	listen(fd,MAX_USER); 
 
-	// manejando conexiones
+	// handle conexions
 	while(1) {
 		printf(" cl count %d\n", clients_count);
 		conn = accept(fd, (struct sockaddr *)&cl_socket, &cl_socket_fd);	
     	if(conn < 0){
     		printf("error on creating a new connection\n");
     	}
-    	inet_ntop(AF_INET, &(cl_socket.sin_addr), client_address, CLIENT_ADDRESS_LENGTH);
-    	printf("Connectado: %s\n", client_address);
-
-    	// pid_t pid;
-    	// pid = fork();
-    	//if(pid == 0) {
+		printf(" cl count %d\n", clients_count);
+		inet_ntop(AF_INET, &(cl_socket.sin_addr), client_address, CLIENT_ADDRESS_LENGTH);
+		printf("%s is connected.\n", client_address);
 		connected_clients[clients_count].socket = cl_socket;
 		connected_clients[clients_count].fd = cl_socket_fd;
 		connected_clients[clients_count].connfd = conn;
 		clients_count ++;
-		printf(" cl count increment %d\n", clients_count);
-		pthread_create(&thread, NULL, &recive, (void *) conn);
-		// printf("came back\n");
-        // while (recv(conn, message, 100, 0)>0) {
-        //     // strcpy(message,"");
-        //     printf("Message Received: %s\n", message);
-        //     //An extra breaking condition can be added here (to terminate the child process)            
-        //     // printf("pid %d\n", pid);
-        //     printf("conn fd %d\n", conn);
-    	// }
+		printf("-> users connected: %d\n", clients_count);
+		//the conn fd and coun aka id is sent to the new thread
+		arguments.arg1 = conn;
+		arguments.arg2 = clients_count;
+		pthread_create(&thread, NULL, &recive, (void *) &arguments);
+    	
+		
 	}
 	return 0;
 }
