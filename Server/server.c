@@ -83,7 +83,10 @@ void succesful_reg(int id){
 	user = json_object_new_object();
 	action = json_object_new_string("USER_CONNECTED");
 	the_id = json_object_new_string(connected_clients[id].uid);
+	printf(" alias %s\n", connected_clients[id].alias);
 	name = json_object_new_string(connected_clients[id].alias);
+	printf("status %s\n", connected_clients[id].status);
+
 	status = json_object_new_string(connected_clients[id].status);
 	//adding properties to response objects
 	//1st param = target object to store data
@@ -99,8 +102,10 @@ void succesful_reg(int id){
 	int i = 0;
     for ( i = 0; i < MAX_USER; ++i)
     {
-    	send_message(connected_clients[i].connfd, &connected_clients[i].socket, message);
-    	printf("->Sending succesful to: %s\n", connected_clients[i].alias);
+    	if(id != i){
+    		send_message(connected_clients[i].connfd, &connected_clients[i].socket, message);
+    		printf("->Sending succesful to: %s\n", connected_clients[i].alias);
+    	}
     }
 }
 
@@ -121,9 +126,9 @@ char * errorFunction(char *message){
 }
 
 
-void actionHandler(char *action_request){
+void actionHandler(char *action_request, int id){
 	struct json_object *request, *rq_action, *rq_from, *rq_to, *rq_message;
-
+	printf("action rquest%s\n",action_request );
 	request = json_tokener_parse(action_request);
 
 	json_object_object_get_ex(request, "action", &rq_action);
@@ -159,9 +164,10 @@ void actionHandler(char *action_request){
 		
 		char *handlerAnswer = json_object_get_string(response);
 
-		//printf("repuesta del send_message = \n%s\n", handlerAnswer);
+		printf("repuesta del send_message = \n%s\n", handlerAnswer);
 
 		//INSERTAR ACA INSTRUCCION PARA MANDAR EL MENSAJE 
+		send_message(connected_clients[id].connfd, &connected_clients[id].socket, handlerAnswer);
 
 
 	}else{
@@ -200,6 +206,8 @@ void actionHandler(char *action_request){
 			    }
 
 			    char *handlerAnswer = json_object_get_string(response);
+			    send_message(connected_clients[id].connfd, &connected_clients[id].socket, handlerAnswer);
+		
 				
 			}else{
 				//User is defined so it returns an specific user.
@@ -224,13 +232,15 @@ void actionHandler(char *action_request){
 				}
 
 				char *handlerAnswer = json_object_get_string(response);
-				
+				send_message(connected_clients[id].connfd, &connected_clients[id].socket, handlerAnswer);
 			}
 		}
 	}
 
 	//action change status
 	if(strcmp(action_string, "CHANGE_STATUS")==0){
+
+
 		struct json_object *request_user_id, *request_status;
 
 		//Obtaining all data from request.
@@ -238,7 +248,7 @@ void actionHandler(char *action_request){
 		char *request_user_id_string = json_object_get_string(request_user_id);
 		json_object_object_get_ex(request, "status", &request_status);
 
-
+		printf("voy por aca\n");
 		struct json_object *response, *response_action, *response_user, *response_user_id, *response_user_name, *response_user_status;
 		//Creating response
 		response_action = json_object_new_string("CHANGE_STATUS");
@@ -265,9 +275,8 @@ void actionHandler(char *action_request){
 		}
 
 		char *handlerAnswer = json_object_get_string(response);
-
-		//INSERTAR ACA ACCION PARA MANDAR EL STRING
-
+		send_message(connected_clients[id].connfd, &connected_clients[id].socket, handlerAnswer);
+		
 	}
 
 
@@ -335,6 +344,11 @@ struct json_object *  handshakeHandler(char *client_request, int id){
 	    	user_id = json_object_new_string(connected_clients[id].uid); //insert id ger
 	    	user_name = json_object_new_string(username);
 	    	user_status = json_object_new_string("active");
+
+	    	sprintf(connected_clients[id].alias, "%s", username);
+	    	//connected_clients[id].alias = username;
+	    	sprintf(connected_clients[id].status, "%s", "active");
+	    	//connected_clients[id].status = "active";
 	    	//adding properties to user object
 
 	    	json_object_object_add(user, "id", user_id);
@@ -348,23 +362,23 @@ struct json_object *  handshakeHandler(char *client_request, int id){
 	    	//adding properties to response object
 	    	json_object_object_add(response, "status", status);
 	    	json_object_object_add(response, "user", user);
-	    	succesful_reg(id);
+	    	
 	    	return response;
 	    }
 	}
 	// deprecated
-	else{
-		//Username is empty
-		//Initializing response object properties
-    	struct json_object *message, *status;
-    	response = json_object_new_object();
-    	status = json_object_new_string("ERROR");
-    	message = json_object_new_string("Username is empty!");
-    	//adding properties to response objects
-    	json_object_object_add(response, "status", status);
-		json_object_object_add(response, "message", message);
-		return response;
-	}
+	// else{
+	// 	//Username is empty
+	// 	//Initializing response object properties
+ //    	struct json_object *message, *status;
+ //    	response = json_object_new_object();
+ //    	status = json_object_new_string("ERROR");
+ //    	message = json_object_new_string("Username is empty!");
+ //    	//adding properties to response objects
+ //    	json_object_object_add(response, "status", status);
+	// 	json_object_object_add(response, "message", message);
+	// 	return response;
+	// }
 }
 
 /*Recibe message*/
@@ -385,13 +399,26 @@ void * recive(void * arguments ) {
     while(1) {
         response = recvfrom(socket_fd, message, BUFFER_MSJ_SIZE, 0, NULL, NULL);
         if (response) {
-           printf("if response %s", message); // for debugging
-           send_message(connected_clients[id].connfd, &connected_clients[id].socket, message);
-           json_object *res = handshakeHandler(message, id);
+           //json_object *res = handshakeHandler(message, id);
            //ress contains hanshakeHandler response 
-           char *ress = json_object_get_string(res);
-           send_message(connected_clients[id].connfd, &connected_clients[id].socket, ress);
-           //printf("Respuesta del handshake: %s\n", ress);
+           //char *ress = json_object_get_string(res);
+           //send_message(connected_clients[id].connfd, &connected_clients[id].socket, ress);
+
+           if (strstr(message, "origin")!=NULL){
+            		json_object *respuesta = handshakeHandler(message, id);
+            		char *resp = json_object_get_string(respuesta);
+            		send_message(connected_clients[id].connfd, &connected_clients[id].socket, resp);
+					printf("%s", resp); 
+					succesful_reg(id);
+            	}
+            else if(strstr(message, "action")!=NULL){
+             		// handle acctions'
+             		printf("action \n");
+             		actionHandler(message,  id);
+           
+
+             	}
+
      //        // byr
      //        if (strcmp(message, 'BYE')==0){
      //        	// TODO: handle close conntion
@@ -469,6 +496,7 @@ int main(int argc, char const *argv[]){
 		connected_clients[clients_count].fd = cl_socket_fd;
 		connected_clients[clients_count].connfd = conn;
 		sprintf(connected_clients[clients_count].uid, "%d", clients_count);
+
 
 		//connected_clients[clients_count].uid = clients_count;
 		printf("-> users connected: %d\n", clients_count);
