@@ -159,8 +159,15 @@ void * recive(void * threadData) {
                   register2(message);
               }
               }
+              // In this case is when a new user is online
               if (strstr(message, "USER_CONNECTED")!=NULL){
                   newUser(message);
+                  
+              }
+              // When the session finish
+              if (strstr(message, "BYE")!=NULL){
+                  printf("Gracias por utilizar el chat\n" );
+                  exit(0);
               }
               int comp;
               comp = strncmp(message,"BYE",2);
@@ -327,8 +334,6 @@ printf("----------------------------------------------------------\n");
 
            case 5: // get info of users
              send(fd, "BYE", BUFFER_MSJ_SIZE, 0);
-            printf("Gracias por utilizar el chat\n" );
-            exit(0);
             
          }
       
