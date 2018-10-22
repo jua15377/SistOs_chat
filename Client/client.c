@@ -163,6 +163,7 @@ void receiveMessage(message){
     printf("> ",idString2);
 }
 receiveStatus(message){
+   struct json_object *response, *userJson;
   struct json_object  *id, *user,*status,*messagej,*from,*to,*action,*name;
   response = json_tokener_parse(message);
   json_object_object_get_ex(response, "user", &user);
@@ -176,6 +177,22 @@ receiveStatus(message){
   //printf("%s\n", idString);
   printf("%s", idString2);
   printf(" ahora esta: ",status);
+}
+void receiveUsers(message){
+   struct json_object *response, *userJson;
+struct json_object  *id, *user,*status,*messagej,*from,*to,*action,*name;
+  response = json_tokener_parse(message);
+  json_object_object_get_ex(response, "users", &user);
+  char *idString =  json_object_get_string(user);
+ // userJson = json_tokener_parse(idString);
+  //json_object_object_get_ex(userJson, "name", &name);
+  //json_object_object_get_ex(userJson, "status", &status);
+  //char *idString2 =  json_object_get_string(name);
+  //char *idString3 =  json_object_get_string(status);
+  //printf("%s\n", message);
+  //printf("%s\n", idString);
+  printf(" Usuarios conectados %s\n" );
+  printf("%s", idString);
 }
 /*Recive data from server HERE SHOULD HANDEL the answers from server*/
 void * recive(void * threadData) {
@@ -221,6 +238,9 @@ void * recive(void * threadData) {
               }
               if (strstr(message, "CHANGED_STATUS")!=NULL){
                   receiveStatus(message);
+              }
+              if (strstr(message, "LIST_USER")!=NULL){
+                  receiveUsers(message);
               }
               int comp;
               comp = strncmp(message,"BYE",2);
@@ -392,13 +412,13 @@ printf("----------------------------------------------------------\n");
 
            case 3: // Get users connected info
             
-
+            getUsersInfo(); //TODO put a parameter to handle only connected users
 
              break;
 
            case 4: //  get specific info of a user
           
-
+              getUsersInfo(); // TODO 
              break;
 
            case 5: //BYE
