@@ -117,6 +117,7 @@ char* scanInput()
   return message;
 }
 
+// Function that notifies when a new user is online
 newUser(message){
 struct json_object *response, *userJson;
 
@@ -127,7 +128,7 @@ struct json_object *response, *userJson;
     userJson = json_tokener_parse(idString);
     json_object_object_get_ex(userJson, "name", &name);
     char *idString2 =  json_object_get_string(name);
-    printf("%s\n", message);
+    //printf("%s\n", message);
     //printf("%s\n", idString);
     printf("%s", idString2);
     printf(" se acaba de conectar");
