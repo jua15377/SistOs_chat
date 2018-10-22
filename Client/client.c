@@ -311,6 +311,16 @@ printf("%s \n",respuesta);
 send(fd, respuesta, BUFFER_MSJ_SIZE, 0);
  
 }
+void getUsersInfo(){
+ struct json_object *request, *userJson;
+ struct json_object  *id, *user,*status,*messagej,*from,*to,*action,*name;
+ request = json_object_new_object();
+ action = json_object_new_string("LIST_USER");
+ json_object_object_add(request, "action", action);
+ char *respuesta = json_object_get_string(request);
+ printf("%s \n",respuesta);
+ send(fd, respuesta, BUFFER_MSJ_SIZE, 0);
+}
 int main(int argc, char const *argv[]){
   // It needs 4 parameters
   if (argc != 4){
@@ -380,18 +390,18 @@ printf("----------------------------------------------------------\n");
              changeStatus(stat);
              break;
 
-           case 3: // Change status
+           case 3: // Get users connected info
             
 
 
              break;
 
-           case 4: //  get Users status
+           case 4: //  get specific info of a user
           
 
              break;
 
-           case 5: // get info of users
+           case 5: //BYE
              send(fd, "BYE", BUFFER_MSJ_SIZE, 0);
             
          }
