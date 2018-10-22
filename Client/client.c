@@ -134,6 +134,21 @@ struct json_object *response, *userJson;
     printf(" se acaba de conectar");
     
 }
+disconectUser(message){
+struct json_object *response, *userJson;
+
+    struct json_object  *id, *user,*status,*messagej,*from,*to,*action,*name;
+    response = json_tokener_parse(message);
+    json_object_object_get_ex(response, "user", &user);
+    char *idString =  json_object_get_string(user);
+    userJson = json_tokener_parse(idString);
+    json_object_object_get_ex(userJson, "name", &name);
+    char *idString2 =  json_object_get_string(name);
+    //printf("%s\n", message);
+    //printf("%s\n", idString);
+    printf("%s", idString2);
+    printf(" se acaba de desconectar");
+}
 /*Recive data from server HERE SHOULD HANDEL the answers from server*/
 void * recive(void * threadData) {
     int socket_fd, response;
@@ -168,6 +183,10 @@ void * recive(void * threadData) {
               if (strstr(message, "BYE")!=NULL){
                   printf("Gracias por utilizar el chat\n" );
                   exit(0);
+              }
+              // When the session of another user finish
+              if (strstr(message, "USER_DISCONNECTED")!=NULL){
+                  disconectUser(message);
               }
               int comp;
               comp = strncmp(message,"BYE",2);
