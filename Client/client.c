@@ -117,6 +117,22 @@ char* scanInput()
   return message;
 }
 
+newUser(message){
+struct json_object *response, *userJson;
+
+    struct json_object  *id, *user,*status,*messagej,*from,*to,*action,*name;
+    response = json_tokener_parse(message);
+    json_object_object_get_ex(response, "user", &user);
+    char *idString =  json_object_get_string(user);
+    userJson = json_tokener_parse(idString);
+    json_object_object_get_ex(userJson, "name", &name);
+    char *idString2 =  json_object_get_string(name);
+    printf("%s\n", message);
+    //printf("%s\n", idString);
+    printf("%s", idString2);
+    printf(" se acaba de conectar");
+    
+}
 /*Recive data from server HERE SHOULD HANDEL the answers from server*/
 void * recive(void * threadData) {
     int socket_fd, response;
@@ -125,16 +141,6 @@ void * recive(void * threadData) {
     socket_fd = pData->socket;
     char* prompt = pData->userName;
     memset(message, 0, BUFFER_MSJ_SIZE); // Clear message buffer
-    
-    //------------Trash for parse json-------------------
-    
-    
-
-    //char *respuesta1 =  json_object_get_string(request);
-    //printf("%s\n","HolaHola" );
-    //char *respuesta1 = json_object_get_string(request);
-    //------------------------------
-
     // Print received message
     while(1) {
         response = recvfrom(socket_fd, message, BUFFER_MSJ_SIZE, 0, NULL, NULL);
@@ -146,13 +152,14 @@ void * recive(void * threadData) {
               printf("\nPeer disconnected\n");
               break;
         } else {
+          // In this case is the register
               if (strstr(message, "OK")!=NULL){
-                // In this case is the register
                 if (strstr(message, userNameg)!=NULL){
                   register2(message);
-
               }
-
+              }
+              if (strstr(message, "USER_CONNECTED")!=NULL){
+                  newUser(message);
               }
               int comp;
               comp = strncmp(message,"BYE",2);
