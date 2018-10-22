@@ -29,10 +29,27 @@ char *mHandShake = "{\"host\":\"";
 typedef struct localInfo{
     char* userName;
     int socket;
+    char* id;
 }Info ;
-
+Info info;
 char* LastcharDel(char* name);
+void register2(message){
+    struct json_object *response, *userJson;
 
+    struct json_object  *id, *user,*status,*messagej,*from,*to,*action;
+    response = json_tokener_parse(message);
+    json_object_object_get_ex(response, "user", &user);
+    char *idString =  json_object_get_string(user);
+    userJson = json_tokener_parse(idString);
+    json_object_object_get_ex(userJson, "id", &id);
+    char *idString2 =  json_object_get_string(id);
+    printf("%s\n", message);
+    //printf("%s\n", idString);
+    printf("Registro exitoso%s\n");
+    printf("%s\n", idString2);
+    info.id = idString2;
+    
+    }
 
 // This function get the current ip of the client
 char* getIp(){
@@ -109,7 +126,14 @@ void * recive(void * threadData) {
     char* prompt = pData->userName;
     memset(message, 0, BUFFER_MSJ_SIZE); // Clear message buffer
     
+    //------------Trash for parse json-------------------
+    
+    
 
+    //char *respuesta1 =  json_object_get_string(request);
+    //printf("%s\n","HolaHola" );
+    //char *respuesta1 = json_object_get_string(request);
+    //------------------------------
 
     // Print received message
     while(1) {
@@ -123,8 +147,9 @@ void * recive(void * threadData) {
               break;
         } else {
               if (strstr(message, "OK")!=NULL){
+                // In this case is the register
                 if (strstr(message, userNameg)!=NULL){
-                  printf("Registro exitoso> %s\n",message );
+                  register2(message);
 
               }
 
@@ -212,7 +237,7 @@ printf("----------------------------------------------------------\n");
     printf("----------------------------------------------------------\n");
     printf("\n");
 
-    Info info;
+    
     info.userName = argv[1];
     info.socket = fd;
   
@@ -224,17 +249,17 @@ printf("----------------------------------------------------------\n");
 
   while(1) {  
 
-        printf("1.Chat con todos\n");
-        printf("2.Chat con un usuario\n");
-        printf("3.Cambiar estado\n");
-        printf("4.Usuarios e informacion\n");
-        printf("5.Informacion en especifico de un usuario \n");
-         printf("6. Salir\n");
+
+        printf("1.Chat con un usuario\n");
+        printf("2.Cambiar estado\n");
+        printf("3.Usuarios e informacion\n");
+        printf("4.Informacion en especifico de un usuario \n");
+        printf("5. Salir\n");
           
-         opcion = atoi(scanInput());
-         switch(opcion)
+        opcion = atoi(scanInput());
+        switch(opcion)
          {
-           case 1: //  Chat with all
+           case 1: //  Chat with a user
               printf("Ingrese un nuevo mensaje: \n");
             printf("active\n");
             printf("busy \n");
@@ -293,11 +318,10 @@ printf("----------------------------------------------------------\n");
              break;
 
            case 5: // get info of users
-             break;
-            case 6:
-            send(fd, "BYE", BUFFER_MSJ_SIZE, 0);
+             send(fd, "BYE", BUFFER_MSJ_SIZE, 0);
             printf("Gracias por utilizar el chat\n" );
             exit(0);
+            
          }
       
       
