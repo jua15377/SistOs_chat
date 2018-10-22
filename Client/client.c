@@ -276,6 +276,23 @@ sendMessage(message){
  printf("%s \n",respuesta);
  send(fd, respuesta, BUFFER_MSJ_SIZE, 0);
 }
+changeStatus(message){
+  printf("%s\n", message);
+
+ struct json_object *request, *userJson;
+ struct json_object  *id, *user,*status,*messagej,*from,*to,*action,*name;
+ request = json_object_new_object();
+ action = json_object_new_string("CHANGE_STATUS");
+ user = json_object_new_string(info.userName);
+ status = json_object_new_string(LastcharDel(message));
+json_object_object_add(request, "action", action);
+json_object_object_add(request, "user", user);
+json_object_object_add(request, "status", status);
+char *respuesta = json_object_get_string(request);
+printf("%s \n",respuesta);
+send(fd, respuesta, BUFFER_MSJ_SIZE, 0);
+ 
+}
 int main(int argc, char const *argv[]){
   // It needs 4 parameters
   if (argc != 4){
@@ -333,35 +350,20 @@ printf("----------------------------------------------------------\n");
             fgets(stat, 100, stdin);
             sendMessage(stat);
             
-
-      //printf(info.userName);
              break;
 
-           case 2: //  chat with a user
+           case 2: //  change status
 
-             printf("Ingrese el usuario al que enviara el mensaje: \n");
-
+             printf("Ingrese el nuevo estado: \n");
+             printf("active\n");
+             printf("busy \n");
+             printf("inactive\n");
+             fgets(stat, 100, stdin);
+             changeStatus(stat);
              break;
 
            case 3: // Change status
-            printf("Ingrese el nuevo estado: \n");
-            printf("active\n");
-            printf("busy \n");
-            printf("inactive\n");
-            fgets(stat, 100, stdin);
-            printf("%s\n", stat);
-             struct json_object *change;
-             struct json_object  *action, *user, *status;
-             change = json_object_new_object();
-             action = json_object_new_string("CHANGE_STATUS");
-             user = json_object_new_string(info.userName);
-             status = json_object_new_string(LastcharDel(stat));
-            json_object_object_add(change, "action", action);
-            json_object_object_add(change, "user", user);
-            json_object_object_add(change, "status", status);
-            char *respuesta2 = json_object_get_string(change);
-            printf("%s \n",respuesta2);
-            send(fd, respuesta2, BUFFER_MSJ_SIZE, 0);
+            
 
 
              break;
