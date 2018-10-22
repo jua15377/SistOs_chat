@@ -23,6 +23,7 @@ u_short port;
 int opcion;
 char stat[SIZE_STATUS];
 
+
 char *mHandShake = "{\"host\":\"";
 typedef struct localInfo{
     char* userName;
@@ -107,6 +108,8 @@ void * recive(void * threadData) {
     socket_fd = pData->socket;
     char* prompt = pData->userName;
     memset(message, 0, BUFFER_MSJ_SIZE); // Clear message buffer
+    
+
 
     // Print received message
     while(1) {
@@ -120,18 +123,23 @@ void * recive(void * threadData) {
               break;
         } else {
               int comp;
-              printf("respuesta del server: %s\n", message);
+              //printf("respuesta del server: %s\n", message);
               comp = strncmp(message,"BYE",2);
               if (comp!=0){
-                    printf("\nServer> %s", message);
+                /*struct json_object *handshake , *id;
+                char *messagej;
+                messagej = message
+                handshake = json_tokener_parse(messagej);
+                json_object_object_get_ex(handshake, "user", &id);
+                char *user_id = json_object_get_string(handshake);
+                printf("hola",user_id);
+                printf("alo");*/
+                printf("\nServer> %s", message);
               printf("\n");
               //printf("%s", prompt);
               printf("Ingrese una opcion:\n");
               fflush(stdout); // Make sure "User>" gets printed
           
-              }
-              else{
-
               }
           }
     }
@@ -198,7 +206,7 @@ printf("----------------------------------------------------------\n");
     json_object_object_add(request, "user", user);
     
     //char *respuesta1 =  json_object_get_string(request);
-    printf("%s\n","HolaHola" );
+    //printf("%s\n","HolaHola" );
     char *respuesta1 = json_object_get_string(request);
     printf("Local ipp is : %s \n" , getIp());
     printf("%s \n",respuesta1);
@@ -225,10 +233,26 @@ printf("----------------------------------------------------------\n");
          switch(opcion)
          {
            case 1: //  Chat with all
-              printf("%s","Ingrese su mensaje: " );
-              fgets(message, 100, stdin);
-              send(fd, message, BUFFER_MSJ_SIZE, 0);
-              memset(message, 0, BUFFER_MSJ_SIZE);
+              printf("Ingrese un nuevo mensaje: \n");
+            printf("active\n");
+            printf("busy \n");
+            printf("inactive\n");
+            fgets(stat, 100, stdin);
+            printf("%s\n", stat);
+             struct json_object *change2;
+             struct json_object  *action2, *user2, *status2;
+             change2 = json_object_new_object();
+             action2 = json_object_new_string("SEND_MESSAGE");
+             user2 = json_object_new_string("1");
+             status2 = json_object_new_string(LastcharDel(stat));
+            json_object_object_add(change2, "action", action2);
+            json_object_object_add(change2, "from", user2);
+            json_object_object_add(change2, "to", status2);
+            json_object_object_add(change2, "message", status2);
+            char *respuesta3 = json_object_get_string(change2);
+            printf("%s \n",respuesta3);
+            send(fd, respuesta3, BUFFER_MSJ_SIZE, 0);
+
       //printf(info.userName);
              break;
 
