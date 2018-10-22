@@ -241,6 +241,24 @@ void handShakeMessage(userName){
     
 }
 
+sendMessage(message){
+  printf("El mensaje a enviar es>%s\n", message);
+ 
+ struct json_object *request, *userJson;
+ struct json_object  *id, *user,*status,*messagej,*from,*to,*action,*name;
+ request = json_object_new_object();
+ action = json_object_new_string("SEND_MESSAGE");
+ from = json_object_new_string(info.id);
+ to = json_object_new_string("1"); //TODO handle id of other users
+ messagej = json_object_new_string(LastcharDel(message));
+ json_object_object_add(request, "action", action);
+ json_object_object_add(request, "from", from);
+ json_object_object_add(request, "to", to);
+ json_object_object_add(request, "message", messagej);
+ char *respuesta = json_object_get_string(request);
+ printf("%s \n",respuesta);
+ send(fd, respuesta, BUFFER_MSJ_SIZE, 0);
+}
 int main(int argc, char const *argv[]){
   // It needs 4 parameters
   if (argc != 4){
@@ -294,25 +312,10 @@ printf("----------------------------------------------------------\n");
         switch(opcion)
          {
            case 1: //  Chat with a user
-              printf("Ingrese un nuevo mensaje: \n");
-            printf("active\n");
-            printf("busy \n");
-            printf("inactive\n");
+            printf("Ingrese un nuevo mensaje: \n");
             fgets(stat, 100, stdin);
-            printf("%s\n", stat);
-             struct json_object *change2;
-             struct json_object  *action2, *user2, *status2;
-             change2 = json_object_new_object();
-             action2 = json_object_new_string("SEND_MESSAGE");
-             user2 = json_object_new_string("1");
-             status2 = json_object_new_string(LastcharDel(stat));
-            json_object_object_add(change2, "action", action2);
-            json_object_object_add(change2, "from", user2);
-            json_object_object_add(change2, "to", status2);
-            json_object_object_add(change2, "message", status2);
-            char *respuesta3 = json_object_get_string(change2);
-            printf("%s \n",respuesta3);
-            send(fd, respuesta3, BUFFER_MSJ_SIZE, 0);
+            sendMessage(stat);
+            
 
       //printf(info.userName);
              break;
