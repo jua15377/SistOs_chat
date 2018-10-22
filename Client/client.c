@@ -162,6 +162,21 @@ void receiveMessage(message){
     printf("%s", idString);
     printf("> ",idString2);
 }
+receiveStatus(message){
+  struct json_object  *id, *user,*status,*messagej,*from,*to,*action,*name;
+  response = json_tokener_parse(message);
+  json_object_object_get_ex(response, "user", &user);
+  char *idString =  json_object_get_string(user);
+  userJson = json_tokener_parse(idString);
+  json_object_object_get_ex(userJson, "name", &name);
+  json_object_object_get_ex(userJson, "status", &status);
+  char *idString2 =  json_object_get_string(name);
+  char *idString3 =  json_object_get_string(status);
+  //printf("%s\n", message);
+  //printf("%s\n", idString);
+  printf("%s", idString2);
+  printf(" ahora esta: ",status);
+}
 /*Recive data from server HERE SHOULD HANDEL the answers from server*/
 void * recive(void * threadData) {
     int socket_fd, response;
@@ -203,6 +218,9 @@ void * recive(void * threadData) {
               }
               if (strstr(message, "RECEIVE_MESSAGE")!=NULL){
                   receiveMessage(message);
+              }
+              if (strstr(message, "CHANGED_STATUS")!=NULL){
+                  receiveStatus(message);
               }
               int comp;
               comp = strncmp(message,"BYE",2);
