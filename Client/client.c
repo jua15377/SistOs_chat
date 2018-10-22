@@ -22,6 +22,7 @@ char *server_IP;
 u_short port;
 int opcion;
 char stat[SIZE_STATUS];
+char userNameg[SIZE_STATUS];
 
 
 char *mHandShake = "{\"host\":\"";
@@ -32,12 +33,8 @@ typedef struct localInfo{
 
 char* LastcharDel(char* name);
 
-/*void * sendHandShake(){
-      
-      
-      //send(fd, message, BUFFER_MSJ_SIZE, 0);
-      //memset(message, 0, BUFFER_MSJ_SIZE);
-}*/
+
+// This function get the current ip of the client
 char* getIp(){
 
     const char* google_dns_server = "8.8.8.8";
@@ -82,6 +79,8 @@ char* getIp(){
    
     
  }
+
+ // This function is only for inputs like fgets
 char* scanInput()
 {
   char *message = malloc(BUFFER_MSJ_SIZE );
@@ -100,6 +99,7 @@ char* scanInput()
 
   return message;
 }
+
 /*Recive data from server HERE SHOULD HANDEL the answers from server*/
 void * recive(void * threadData) {
     int socket_fd, response;
@@ -122,29 +122,26 @@ void * recive(void * threadData) {
               printf("\nPeer disconnected\n");
               break;
         } else {
+              if (strstr(message, "OK")!=NULL){
+                if (strstr(message, userNameg)!=NULL){
+                  printf("Registro exitoso> %s\n",message );
+
+              }
+
+              }
               int comp;
-              //printf("respuesta del server: %s\n", message);
               comp = strncmp(message,"BYE",2);
-              if (comp!=0){
-                /*struct json_object *handshake , *id;
-                char *messagej;
-                messagej = message
-                handshake = json_tokener_parse(messagej);
-                json_object_object_get_ex(handshake, "user", &id);
-                char *user_id = json_object_get_string(handshake);
-                printf("hola",user_id);
-                printf("alo");*/
-                printf("\nServer> %s", message);
+              printf("\nServer> %s", message);
               printf("\n");
               //printf("%s", prompt);
               printf("Ingrese una opcion:\n");
               fflush(stdout); // Make sure "User>" gets printed
           
-              }
           }
     }
 }
 
+// This function is to remove the last character of a message typed.
 char* LastcharDel(char* name)
 {
     int i = 0;
@@ -157,10 +154,36 @@ char* LastcharDel(char* name)
     return name;
 }
 
+// Function to send the handShakeMessage
+void handShakeMessage(userName){
+  
+    struct json_object *request;
+
+    struct json_object  *host, *origin, *user;
+    request = json_object_new_object();
+    host = json_object_new_string(server_IP);
+    printf("Local ipp is : %s \n" , getIp());
+    origin = json_object_new_string(getIp());
+    user = json_object_new_string(userName);
+
+    json_object_object_add(request, "host", host);
+    json_object_object_add(request, "origin", origin);
+    json_object_object_add(request, "user", user);
+    
+    //char *respuesta1 =  json_object_get_string(request);
+    //printf("%s\n","HolaHola" );
+    char *respuesta1 = json_object_get_string(request);
+    printf("Local ipp is : %s \n" , getIp());
+    printf("%s \n",respuesta1);
+    printf("\n");
+    //send(fd, respuesta1, BUFFER_MSJ_SIZE, 0);
+      //memset(respuesta1, 0, BUFFER_MSJ_SIZE);
+    send(fd, respuesta1, BUFFER_MSJ_SIZE, 0);
+    
+}
 
 int main(int argc, char const *argv[]){
-  // defina local variables
-  // manejo de ingreso de variables
+  // It needs 4 parameters
   if (argc != 4){
     printf("Uso: client <username> <server_ip> <server_port>\n");
         exit(1);
@@ -168,6 +191,7 @@ int main(int argc, char const *argv[]){
   else{
     server_IP = argv[2];
     port = (u_short) atoi(argv[3]);
+    userNameg[SIZE_STATUS] = argv[1];
 
   }
   fd = socket(AF_INET, SOCK_STREAM, 0); // creates new local socket
@@ -187,38 +211,16 @@ printf("----------------------------------------------------------\n");
     printf("---------------------Bienvenido---------------------------\n");
     printf("----------------------------------------------------------\n");
     printf("\n");
-  //test
-  Info info;
+
+    Info info;
     info.userName = argv[1];
     info.socket = fd;
-
-    struct json_object *request;
-
-    struct json_object  *host, *origin, *user;
-    request = json_object_new_object();
-    host = json_object_new_string(server_IP);
-    printf("Local ipp is : %s \n" , getIp());
-    origin = json_object_new_string(getIp());
-    user = json_object_new_string(info.userName);
-
-    json_object_object_add(request, "host", host);
-    json_object_object_add(request, "origin", origin);
-    json_object_object_add(request, "user", user);
-    
-    //char *respuesta1 =  json_object_get_string(request);
-    //printf("%s\n","HolaHola" );
-    char *respuesta1 = json_object_get_string(request);
-    printf("Local ipp is : %s \n" , getIp());
-    printf("%s \n",respuesta1);
-    printf("\n");
-    //send(fd, respuesta1, BUFFER_MSJ_SIZE, 0);
-      //memset(respuesta1, 0, BUFFER_MSJ_SIZE);
-
+  
+    handShakeMessage(info.userName);
     pthread_t thread;
     pthread_create(&thread, NULL, &recive, (void *) &info);
     printf("Conectando Servidor ...\n");
-    send(fd, respuesta1, BUFFER_MSJ_SIZE, 0);
-    //memset(respuesta1, 0, BUFFER_MSJ_SIZE);
+    
 
   while(1) {  
 
