@@ -1,5 +1,4 @@
 #include <json.h>
-
 #include <stdio.h>
 #include <sys/socket.h> //For Sockets
 #include <stdlib.h>
@@ -227,6 +226,8 @@ void * recive(void * threadData) {
               // When the session finish
               if (strstr(message, "BYE")!=NULL){
                   printf("Gracias por utilizar el chat\n" );
+                  close(fd);
+                  pthread_t_exit(NULL);
                   exit(0);
               }
               // When the session of another user finish

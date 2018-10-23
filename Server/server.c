@@ -45,7 +45,7 @@ Cliente connected_clients[MAX_USER]; // this array will store all the connected 
 
 void * start_server(){
 	// preparando conexion
-	printf("Preparando servidor...\n");
+	printf("starting serer...\n");
 	serv.sin_family = AF_INET; //protocolo de red
 	serv.sin_port = htons(port); //puesto a escuchar
 	serv.sin_addr.s_addr = INADDR_ANY;//ip locar
@@ -103,8 +103,10 @@ void succesful_reg(int id){
     for ( i = 0; i < MAX_USER; ++i)
     {
     	if(id != i){
-    		send_message(connected_clients[i].connfd, &connected_clients[i].socket, message);
-    		printf("->Sending succesful to: %s\n", connected_clients[i].alias);
+    		if( strcmp(connected_clients[i].status,"")!=NULL){
+    			send_message(connected_clients[i].connfd, &connected_clients[i].socket, message);
+    			printf("->Sending succesful new connection to: %s\n", connected_clients[i].alias);
+    		}	
     	}
     }
 }
@@ -125,10 +127,66 @@ char * errorFunction(char *message){
 	return prueba;
 }
 
+void disconnect_client(int id){
+	int fd;
+	char *message1;
+	char *message;
+	/**
+	{
+  	"action": "USER_DISCONNECTED",
+	  	"user": {
+			"id": "ASdbjkxclz+asd?",
+			"name": "<nombre>",
+			"status": "<status>"
+	 	}
+	}
+	*/
+	//creating json
+	struct json_object *parent, *action, *user, *the_id, *name, *status;
+	parent = json_object_new_object();
+	user = json_object_new_object();
+	action = json_object_new_string("USER_DISCONNECTED");
+	the_id = json_object_new_string(connected_clients[id].uid);
+	name = json_object_new_string(connected_clients[id].alias);
+
+	status = json_object_new_string(connected_clients[id].status);
+	//adding properties to response objects
+	//1st param = target object to store data
+	//2nd param = key to json_object
+	//3rd param = json object content
+	json_object_object_add(user, "id", the_id);
+	json_object_object_add(user, "name", name);
+	json_object_object_add(user, "status", status);
+	json_object_object_add(parent, "action", action);
+	json_object_object_add(parent, "user", user);
+	message = json_object_get_string(parent);
+	// cleaning the user info..
+
+	strcpy(connected_clients[id].status,"");
+	fd = connected_clients[id].connfd;
+	message1 = "BYE";
+	//sending response to the client to disconect 
+	send_message(connected_clients[id].connfd, &connected_clients[id].socket, message1);
+	close(fd);
+	
+	int i = 0;
+    for ( i = 0; i < MAX_USER; ++i)
+    {
+    	if(id != i){
+    		if( strcmp(connected_clients[i].status,"")!=NULL){
+    			send_message(connected_clients[i].connfd, &connected_clients[i].socket, message);
+    			printf("->Sending disconect alert to: %s\n", connected_clients[i].alias);
+    		}	
+    	}
+    }
+    printf("%s has gone!... :(\n", connected_clients[id].alias);
+    pthread_exit(NULL);
+
+}
 
 void actionHandler(char *action_request, int id){
 	struct json_object *request, *rq_action, *rq_from, *rq_to, *rq_message;
-	printf("action rquest%s\n",action_request );
+	printf("action request%s\n",action_request );
 	request = json_tokener_parse(action_request);
 
 	json_object_object_get_ex(request, "action", &rq_action);
@@ -181,7 +239,7 @@ void actionHandler(char *action_request, int id){
 			if(rq_usr_content == NULL){
 				//user is not defined so it returns all connected users.
 				
-				int i = 0;
+				int i;
 				for ( i = 0; i < MAX_USER; ++i)
 			    {
 			    	struct json_objecet *user;
@@ -190,19 +248,21 @@ void actionHandler(char *action_request, int id){
 
 			    	struct json_object *id, *name, *status;
 
-			    	char *usr_id = connected_clients[i].uid;
-			    	id = json_object_new_string(usr_id);
+			    	//char *usr_id = ;
+			    	id = json_object_new_string(connected_clients[i].uid);
 			    	json_object_object_add(user, "id", id);
 
-			    	char *usr_name = connected_clients[i].alias;
-			    	name = json_object_new_string(usr_name);
+			    	// char *usr_name = ;
+			    	name = json_object_new_string(connected_clients[i].alias);
 			    	json_object_object_add(user, "name", name);
 
-			    	char *usr_status = connected_clients[i].status;
-			    	status = json_object_new_string(usr_status);
+			    	// char *usr_status = ;
+			    	status = json_object_new_string(connected_clients[i].status);
 			    	json_object_object_add(user, "status", status);
 
 			    	json_object_object_add(response, "users", user);
+			    	char *test = json_object_get_string(response);
+			    	printf("users info %s\n",test );
 			    }
 
 			    char *handlerAnswer = json_object_get_string(response);
@@ -212,7 +272,7 @@ void actionHandler(char *action_request, int id){
 			}else{
 				//User is defined so it returns an specific user.
 				printf("CONTENIDO DE USER: %s\n", rq_usr_content);
-				int i = 0;
+				int i;
 				for(i = 0; i< MAX_USER; i++){
 					if(strcmp(rq_usr_content, connected_clients[i].uid)==0){
 						struct json_object *user, *name, *status;
@@ -339,16 +399,14 @@ struct json_object *  handshakeHandler(char *client_request, int id){
 	    	struct json_object *user, *user_id, *user_name, *user_status, *status;
 	    	//initializing user object properties
 	    	user = json_object_new_object();
-	    	printf("ID = %d\n", id);
-	    	printf("ID = %s\n", connected_clients[i].uid);
 	    	user_id = json_object_new_string(connected_clients[id].uid); //insert id ger
 	    	user_name = json_object_new_string(username);
 	    	user_status = json_object_new_string("active");
 
-	    	sprintf(connected_clients[id].alias, "%s", username);
-	    	//connected_clients[id].alias = username;
-	    	sprintf(connected_clients[id].status, "%s", "active");
-	    	//connected_clients[id].status = "active";
+	    	//sprintf(connected_clients[id].alias, "%s", username);
+	    	strcpy(connected_clients[id].alias, username);
+	    	//sprintf(connected_clients[id].status, "%s", "active");
+	    	strcpy(connected_clients[id].status, "active");
 	    	//adding properties to user object
 
 	    	json_object_object_add(user, "id", user_id);
@@ -386,16 +444,14 @@ void * recive(void * arguments ) {
 	//printf("thread\n");
 	struct arg_struct *arg = arguments;
 	//printf("thread 2\n");
-
+ 
     int socket_fd, response, id;
     char *message[BUFFER_MSJ_SIZE];
     memset(message, 0, BUFFER_MSJ_SIZE); // Clear message buffer
     //printf("thread 3\n");
     socket_fd = (int) arg->arg1;
     id = (int) arg->arg2;
-    printf("%d, %d\n", socket_fd,id);
     // Print received message
-    printf("thread 4\n");
     while(1) {
         response = recvfrom(socket_fd, message, BUFFER_MSJ_SIZE, 0, NULL, NULL);
         if (response) {
@@ -408,16 +464,20 @@ void * recive(void * arguments ) {
             		json_object *respuesta = handshakeHandler(message, id);
             		char *resp = json_object_get_string(respuesta);
             		send_message(connected_clients[id].connfd, &connected_clients[id].socket, resp);
-					printf("%s", resp); 
+					printf("%s is connected\n", connected_clients[id].alias);
 					succesful_reg(id);
-            	}
+            }
             else if(strstr(message, "action")!=NULL){
              		// handle acctions'
              		printf("action \n");
              		actionHandler(message,  id);
            
 
-             	}
+            }
+            else if(strstr(message, "BYE") != NULL){
+            		printf("%s requestes to quit\n", connected_clients[id].alias);
+            		disconnect_client(id);
+            }
 
      //        // byr
      //        if (strcmp(message, 'BYE')==0){
@@ -479,12 +539,12 @@ int main(int argc, char const *argv[]){
 	start_server(); // calls the function to setup the server
 
 	// prepare the socket to listen for new connections
-	printf("espreando conexion\n");
+	printf("waiting for new connections...\n");
 	listen(fd,MAX_USER); 
 
 	// handle conexions
 	while(1) {
-		printf(" cl count %d\n", clients_count);
+		//printf(" cl count %d\n", clients_count);
 		conn = accept(fd, (struct sockaddr *)&cl_socket, &cl_socket_fd);	
     	if(conn < 0){
     		printf("error on creating a new connection\n");
