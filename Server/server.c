@@ -111,6 +111,53 @@ void succesful_reg(int id){
     }
 }
 
+// USER CHANGED STATUS
+void notify_status_change(int id){
+	char *message;
+	// constructing json
+	/*
+	{
+	  	"action": "CHANGED_STATUS",
+	  	"user": {
+			"id": "ASdbjkxclz+asd?",
+			"name": "<nombre>",
+			"status": "<status>"
+	 	}
+	}
+	**/
+	struct json_object *parent, *action, *user, *the_id, *name, *status;
+	parent = json_object_new_object();
+	user = json_object_new_object();
+	action = json_object_new_string("CHANGED_STATUS");
+	the_id = json_object_new_string(connected_clients[id].uid);
+	name = json_object_new_string(connected_clients[id].alias);
+
+	status = json_object_new_string(connected_clients[id].status);
+	//adding properties to response objects
+	//1st param = target object to store data
+	//2nd param = key to json_object
+	//3rd param = json object content
+	json_object_object_add(user, "id", the_id);
+	json_object_object_add(user, "name", name);
+	json_object_object_add(user, "status", status);
+	json_object_object_add(parent, "action", action);
+	json_object_object_add(parent, "user", user);
+	message = json_object_get_string(parent);
+
+	int i = 0;
+    for ( i = 0; i < MAX_USER; ++i)
+    {
+    	if(id != i){
+    		if( strcmp(connected_clients[i].status,"")!=NULL){
+    			send_message(connected_clients[i].connfd, &connected_clients[i].socket, message);
+    			printf("->sending status changed notification: %s\n", connected_clients[i].alias);
+    		}	
+    	}
+    }
+}
+
+
+
 
 //Function that creates a string in json-type
 char * errorFunction(char *message){
@@ -310,23 +357,35 @@ void actionHandler(char *action_request, int id){
 		char *request_user_id_string = json_object_get_string(request_user_id);
 		json_object_object_get_ex(request, "status", &request_status);
 
-		printf("voy por aca\n");
+		printf("Creando las structs....\n");
 		struct json_object *response, *response_action, *response_user, *response_user_id, *response_user_name, *response_user_status;
 		//Creating response
+		printf("Inicializando el objecto response...\n");
+		response = json_object_new_object();
+		printf("Creando el string de response_action\n");
 		response_action = json_object_new_string("CHANGE_STATUS");
+		printf("Addingg action to object\n");
 		json_object_object_add(response, "action", response_action);
 
-
+		printf("Estoy antes del for...\n");
 		//creating user value
 		int i = 0;
 		for(i = 0; i< MAX_USER; i++){
-			if(strcmp(request_user_id_string, connected_clients[i].uid)==0){
+			printf("Entre al for...\n");
+			printf("Este es el ID del request...%s\n", request_user_id_string);
+			printf("Este es el ID del del array...%s\n", connected_clients[i].alias);
+			// if(strcmp(request_user_id_string, connected_clients[i].uid)==0){
+			if(strcmp(request_user_id_string, connected_clients[i].alias)==0){
+
 				response_user = json_object_new_object();
 
 				char *usr_name = connected_clients[i].alias;
 				char *usr_status = connected_clients[i].status;
 				response_user_name = json_object_new_string(usr_name);
-				response_user_status = json_object_new_string(usr_status);
+				char *new_status = json_object_get_string(request_status);
+				strcpy(connected_clients[i].status, new_status);
+				printf("Este es el estatus: %s\n", new_status);
+				response_user_status = json_object_new_string(new_status);
 
 				json_object_object_add(response_user, "id", response_user);
 				json_object_object_add(response_user, "name", response_user_name);
@@ -335,7 +394,7 @@ void actionHandler(char *action_request, int id){
 				json_object_object_add(response, "users", response_user);
 			}
 		}
-
+		notify_status_change(id);
 		char *handlerAnswer = json_object_get_string(response);
 		send_message(connected_clients[id].connfd, &connected_clients[id].socket, handlerAnswer);
 		
