@@ -7,7 +7,7 @@
 #include <json.h>
 
 #define MAX_USER 10
-#define BUFFER_MSJ_SIZE 1024
+#define BUFFER_MSJ_SIZE 8000
 #define CLIENT_ADDRESS_LENGTH 100
 
 struct sockaddr_in serv, cl_socket; //variable principal del socket del server
@@ -61,7 +61,7 @@ void * start_server(){
 * NEEDS MORE WORK
 */
 void * send_message(int new_socket_fd, struct sockaddr *cl_addr, void * message) {
-	sendto(new_socket_fd, message, 100, 0, (struct sockaddr *) &cl_addr, sizeof cl_addr);
+	sendto(new_socket_fd, message, strlen(message), 0, (struct sockaddr *) &cl_addr, sizeof cl_addr);
 	return;
 }
 
@@ -230,7 +230,7 @@ void actionHandler(char *action_request, int id){
 
 	}else{
 		if(cmp_list_usr == 0){
-			struct json_object *response, *rq_usr, *response_action;
+			struct json_object *response, *rq_usr, *response_action, *user_list;
 			response = json_object_new_object();
 			json_object_object_get_ex(request, "user", &rq_usr);
 			char *rq_usr_content = json_object_get_string(rq_usr);
@@ -239,33 +239,35 @@ void actionHandler(char *action_request, int id){
 			if(rq_usr_content == NULL){
 				//user is not defined so it returns all connected users.
 				
+				user_list = json_object_new_array();
 				int i;
 				for ( i = 0; i < MAX_USER; ++i)
 			    {
-			    	struct json_objecet *user;
-					user = json_object_new_object();
+			    	if(strcmp(connected_clients[i].status,"")!=NULL){
+    					struct json_objecet *user;
+						user = json_object_new_object();
 
+			    		struct json_object *id, *name, *status;
 
-			    	struct json_object *id, *name, *status;
+			    		//char *usr_id = ;
+			    		id = json_object_new_string(connected_clients[i].uid);
+			    		json_object_object_add(user, "id", id);
 
-			    	//char *usr_id = ;
-			    	id = json_object_new_string(connected_clients[i].uid);
-			    	json_object_object_add(user, "id", id);
+			    		// char *usr_name = ;
+			    		name = json_object_new_string(connected_clients[i].alias);
+			    		json_object_object_add(user, "name", name);
 
-			    	// char *usr_name = ;
-			    	name = json_object_new_string(connected_clients[i].alias);
-			    	json_object_object_add(user, "name", name);
+			    		// char *usr_status = ;
+			    		status = json_object_new_string(connected_clients[i].status);
+			    		json_object_object_add(user, "status", status);
 
-			    	// char *usr_status = ;
-			    	status = json_object_new_string(connected_clients[i].status);
-			    	json_object_object_add(user, "status", status);
-
-			    	json_object_object_add(response, "users", user);
-			    	char *test = json_object_get_string(response);
-			    	printf("users info %s\n",test );
+			    		//add to array of user
+			    		json_object_array_add(user_list, user);
+    				}
 			    }
-
+			    json_object_object_add(response, "users", user_list);
 			    char *handlerAnswer = json_object_get_string(response);
+			    // printf("DEBUG users list %s\n",handlerAnswer );
 			    send_message(connected_clients[id].connfd, &connected_clients[id].socket, handlerAnswer);
 		
 				

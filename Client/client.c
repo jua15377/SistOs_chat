@@ -227,7 +227,6 @@ void * recive(void * threadData) {
               if (strstr(message, "BYE")!=NULL){
                   printf("Gracias por utilizar el chat\n" );
                   close(fd);
-                  pthread_t_exit(NULL);
                   exit(0);
               }
               // When the session of another user finish
