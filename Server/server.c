@@ -433,7 +433,7 @@ struct json_object *  handshakeHandler(char *client_request, int id){
 		for ( i = 0; i < MAX_USER; ++i)
 	    {
 	    	char *name = connected_clients[i].alias;
-	    	if(name == username){
+	    	if(strncmp(name, username, 5)==0){
 	    		exists = 1;
 	    	}
 	    	//printf("conn dentro de for %d\n",connected_clients[i].connfd);
@@ -524,9 +524,18 @@ void * recive(void * arguments ) {
            if (strstr(message, "origin")!=NULL){
             		json_object *respuesta = handshakeHandler(message, id);
             		char *resp = json_object_get_string(respuesta);
-            		send_message(connected_clients[id].connfd, &connected_clients[id].socket, resp);
-					printf("%s is connected\n", connected_clients[id].alias);
-					succesful_reg(id);
+            		if (strstr(resp, "ERROR")!=NULL){
+            			printf("error!!\n");
+            			send_message(connected_clients[id].connfd, &connected_clients[id].socket, resp);
+            			close(id);
+            			pthread_exit(NULL);
+            		}
+            		else{
+            			send_message(connected_clients[id].connfd, &connected_clients[id].socket, resp);
+						printf("%s is connected\n", connected_clients[id].alias);
+						succesful_reg(id);
+            		}
+            		
             }
             else if(strstr(message, "action")!=NULL){
              		// handle acctions'

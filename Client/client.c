@@ -34,6 +34,7 @@ typedef struct localInfo{
     char* id;
 }Info ;
 Info info;
+
 char* LastcharDel(char* name);
 void register2(message){
     struct json_object *response, *userJson;
@@ -213,7 +214,7 @@ char * getMessageId(message){
     char *idString =  json_object_get_string(from);
     char *idString2 =  json_object_get_string(messagej);
     printf("from\n");
-    printf("%s\n",idString );
+    printf("from %s\n",idString );
     return idString;
    // printf("%s", idString);
     //printf("> %s",idString2);
@@ -282,7 +283,7 @@ struct json_object  *id, *user,*status,*messagej,*from,*to,*action,*name;
 
   
 }
-void receiveUser(message,who){
+void receiveUser(message){
   //printf("mensaje%s\n");
   printf("%s\n",message);
   printf("--------------\n");
@@ -375,6 +376,14 @@ struct json_object  *id, *user,*status,*messagej,*from,*to,*action,*name;
   //printf("%s\n", idString);
   
 }
+
+void error_handler(char * message){
+  struct json_object *error, *e_message;
+  error = json_tokener_parse(message);
+  json_object_object_get_ex(error, "message", &e_message);
+  char * error_msj = json_object_get_string(e_message);
+  printf(">>ERROR<<: %s\n", error_msj);
+}
 /*Recive data from server HERE SHOULD HANDEL the answers from server*/
 void * recive(void * threadData) {
     int socket_fd, response;
@@ -391,8 +400,8 @@ void * recive(void * threadData) {
           //fprintf(stderr, "recv() failed: %s\n", strerror(errno));
           break;
         } else if (response == 0) {
-              printf("\nPeer disconnected\n");
-              break;
+              printf("\nConexion terminada\n");
+              exit(1);
         } else {
           // In this case is the register
               if (strstr(message, "OK")!=NULL){
@@ -424,6 +433,10 @@ void * recive(void * threadData) {
               }
               if (strstr(message, "CHANGED_STATUS")!=NULL){
                   receiveStatus(message);
+              }
+              if (strstr(message, "ERROR")!=NULL){
+                  error_handler(message);
+                  exit(0);
               }
               if (strstr(message, "LIST_USER")!=NULL){
                   
