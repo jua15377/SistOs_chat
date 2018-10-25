@@ -270,9 +270,9 @@ void actionHandler(char *action_request, int id){
 		char *handlerAnswer = json_object_get_string(response);
 
 		printf("repuesta del send_message = \n%s\n", handlerAnswer);
-
+		int id_to = atoi(to_string);
 		//INSERTAR ACA INSTRUCCION PARA MANDAR EL MENSAJE 
-		send_message(connected_clients[id].connfd, &connected_clients[id].socket, handlerAnswer);
+		send_message(connected_clients[id_to].connfd, &connected_clients[id_to].socket, handlerAnswer);
 
 
 	}else{
@@ -373,9 +373,9 @@ void actionHandler(char *action_request, int id){
 		for(i = 0; i< MAX_USER; i++){
 			printf("Entre al for...\n");
 			printf("Este es el ID del request...%s\n", request_user_id_string);
-			printf("Este es el ID del del array...%s\n", connected_clients[i].alias);
-			// if(strcmp(request_user_id_string, connected_clients[i].uid)==0){
-			if(strcmp(request_user_id_string, connected_clients[i].alias)==0){
+			printf("Este es el ID del del array...%s\n", connected_clients[i].uid);
+			if(strcmp(request_user_id_string, connected_clients[i].uid)==0){
+			// if(strcmp(request_user_id_string, connected_clients[i].alias)==0){esto servia cuando tenimao malo el cliente
 
 				response_user = json_object_new_object();
 
