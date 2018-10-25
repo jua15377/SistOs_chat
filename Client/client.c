@@ -155,11 +155,11 @@ void receiveMessage(message){
     struct json_object  *id, *user,*status,*messagej,*from,*to,*action,*name;
     response = json_tokener_parse(message);
     json_object_object_get_ex(response, "from", &from); // TODO Handle to use with the user
-    json_object_object_get_ex(response, "action", &messagej);
+    json_object_object_get_ex(response, "message", &messagej);
     char *idString =  json_object_get_string(from);
     char *idString2 =  json_object_get_string(messagej);
     printf("%s", idString);
-    printf("> ",idString2);
+    printf("> %s",idString2);
 }
 receiveStatus(message){
    struct json_object *response, *userJson;
