@@ -185,6 +185,41 @@ struct json_object *response, *userJson;
     printf("%s", idString2);
     printf(" se acaba de desconectar");
 }
+char * getalias(idU){
+   printf("%s\n",alias);
+  
+  struct json_object *response, *userJson,*user_obj;
+  struct json_object  *id, *user,*status,*messagej,*from,*to,*action,*name;
+  response = json_tokener_parse(message);
+  json_object_object_get_ex(response, "users", &user);
+  char *idString =  json_object_get_string(user);
+  printf("--- Usuarios conectados ---\n" );
+ /* printf("------%s\n" );
+  printf("%s", idString);
+  printf("------%s\n" );*/
+  char *idString2;
+  char *idString3;
+  char *idString4;
+  int userListSize = json_object_array_length(user);
+  //printf("%d", userListSize);
+  int i;
+  for (i = 0; i < userListSize; ++i) {
+      user_obj = json_object_array_get_idx(user, i);
+      json_object_object_get_ex(user_obj, "id", &id);
+    json_object_object_get_ex(user_obj, "name", &name);
+    json_object_object_get_ex(user_obj, "status", &status);
+    idString2 = json_object_get_string(name);
+    idString3 = json_object_get_string(status);
+    idString4 = json_object_get_string(id);
+    //printf("%s\n",idString2 );
+
+    if (strstr(idString4,idu) != NULL) {
+        printf("%s\n", idString2 );
+        return  idString2;
+    }
+  }
+  return "null";
+}
 // Function that receive a message to the user
 void receiveMessage(message){
   struct json_object *response, *userJson;
@@ -359,6 +394,10 @@ void * recive(void * threadData) {
                   if (strstr(clientTo,"null")!=NULL){
                     receiveUsers(message);
                   }
+                  if (strstr(clientTo,"msg")!=NULL){
+                    who = getId(message,cTo);
+                    sendMessage(stat,who);
+                  }
                   else{
                     printf("Hasta aqui\n");
                     who = getId(message,cTo);
@@ -428,7 +467,7 @@ sendMessage(message,clientTo){
  request = json_object_new_object();
  action = json_object_new_string("SEND_MESSAGE");
  from = json_object_new_string(info.id);
- to = json_object_new_string("1"); //TODO handle id of other users
+ to = json_object_new_string(clientTo); //TODO handle id of other users
  messagej = json_object_new_string(LastcharDel(message));
  json_object_object_add(request, "action", action);
  json_object_object_add(request, "from", from);
@@ -533,11 +572,13 @@ printf("----------------------------------------------------------\n");
         switch(opcion)
          {
            case 1: //  Chat with a user
+           clientTo="msg";
             printf("Ingrese el alias de usuario para ver su informacion: \n");
-            fgets(clientTo, 100, stdin);
+            fgets(cTo, 100, stdin);
             printf("Ingrese un nuevo mensaje: \n");
             fgets(stat, 100, stdin);
-            sendMessage(stat,clientTo);
+            getUsersInfo();
+            //sendMessage(stat,clientTo);
             
              break;
 
