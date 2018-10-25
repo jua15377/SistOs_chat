@@ -175,7 +175,7 @@ receiveStatus(message){
   //printf("%s\n", message);
   //printf("%s\n", idString);
   printf("%s", idString2);
-  printf(" ahora esta: ",status);
+  printf(" ahora esta: %s",idString3);
 }
 void receiveUsers(message){
    struct json_object *response, *userJson;
