@@ -25,6 +25,7 @@ char userNameg[SIZE_STATUS];
 char cTo[SIZE_STATUS];
 char *clientTo;
 char *who;
+char *msgTemp;
 
 char *mHandShake = "{\"host\":\"";
 typedef struct localInfo{
@@ -185,42 +186,38 @@ struct json_object *response, *userJson;
     printf("%s", idString2);
     printf(" se acaba de desconectar");
 }
-char * getalias(idU){
-   printf("%s\n",alias);
-  
-  struct json_object *response, *userJson,*user_obj;
-  struct json_object  *id, *user,*status,*messagej,*from,*to,*action,*name;
-  response = json_tokener_parse(message);
-  json_object_object_get_ex(response, "users", &user);
-  char *idString =  json_object_get_string(user);
-  printf("--- Usuarios conectados ---\n" );
- /* printf("------%s\n" );
-  printf("%s", idString);
-  printf("------%s\n" );*/
-  char *idString2;
-  char *idString3;
-  char *idString4;
-  int userListSize = json_object_array_length(user);
-  //printf("%d", userListSize);
-  int i;
-  for (i = 0; i < userListSize; ++i) {
-      user_obj = json_object_array_get_idx(user, i);
-      json_object_object_get_ex(user_obj, "id", &id);
-    json_object_object_get_ex(user_obj, "name", &name);
-    json_object_object_get_ex(user_obj, "status", &status);
-    idString2 = json_object_get_string(name);
-    idString3 = json_object_get_string(status);
-    idString4 = json_object_get_string(id);
-    //printf("%s\n",idString2 );
 
-    if (strstr(idString4,idu) != NULL) {
-        printf("%s\n", idString2 );
-        return  idString2;
-    }
-  }
-  return "null";
-}
 // Function that receive a message to the user
+char * getMessage(message){
+  struct json_object *response, *userJson;
+
+    struct json_object  *id, *user,*status,*messagej,*from,*to,*action,*name;
+    response = json_tokener_parse(message);
+    json_object_object_get_ex(response, "from", &from); // TODO Handle to use with the user
+    json_object_object_get_ex(response, "message", &messagej);
+    char *idString =  json_object_get_string(from);
+    char *idString2 =  json_object_get_string(messagej);
+    printf("message\n");
+    printf("%s\n",idString2 );
+    return idString2;
+   // printf("%s", idString);
+    //printf("> %s",idString2);
+}
+char * getMessageId(message){
+  struct json_object *response, *userJson;
+
+    struct json_object  *id, *user,*status,*messagej,*from,*to,*action,*name;
+    response = json_tokener_parse(message);
+    json_object_object_get_ex(response, "from", &from); // TODO Handle to use with the user
+    json_object_object_get_ex(response, "message", &messagej);
+    char *idString =  json_object_get_string(from);
+    char *idString2 =  json_object_get_string(messagej);
+    printf("from\n");
+    printf("%s\n",idString );
+    return idString;
+   // printf("%s", idString);
+    //printf("> %s",idString2);
+}
 void receiveMessage(message){
   struct json_object *response, *userJson;
 
@@ -248,6 +245,42 @@ receiveStatus(message){
   //printf("%s\n", idString);
   printf("%s", idString2);
   printf(" ahora esta: %s",idString3);
+}
+char * receiveUser2(message,who){
+  //printf("mensaje%s\n");
+  printf("%s\n",message);
+  printf("--------------\n");
+  printf("%s\n",who );
+   struct json_object *response, *userJson,*user_obj;
+struct json_object  *id, *user,*status,*messagej,*from,*to,*action,*name;
+  response = json_tokener_parse(message);
+  json_object_object_get_ex(response, "users", &user);
+  char *idString =  json_object_get_string(user);
+  printf("--- Usuarios conectados ---\n" );
+ /* printf("------%s\n" );
+  printf("%s", idString);
+  printf("------%s\n" );*/
+  char *idString2;
+  char *idString3;
+  int userListSize = json_object_array_length(user);
+  //printf("%d", userListSize);
+  int i;
+  for (i = 0; i < userListSize; ++i) {
+      user_obj = json_object_array_get_idx(user, i);
+      json_object_object_get_ex(user_obj, "id", &id);
+    json_object_object_get_ex(user_obj, "name", &name);
+    json_object_object_get_ex(user_obj, "status", &status);
+    idString2 = json_object_get_string(id);
+    idString3 = json_object_get_string(status);
+      if (strstr(idString2,who) != NULL) {
+        
+        idString2 = json_object_get_string(name);
+        return idString2;
+    }    
+    
+  }
+
+  
 }
 void receiveUser(message,who){
   //printf("mensaje%s\n");
@@ -383,6 +416,10 @@ void * recive(void * threadData) {
                   disconectUser(message);
               }
               if (strstr(message, "RECEIVE_MESSAGE")!=NULL){
+                  //clientTo = "rec";
+                  //printf("///////\n");
+                  //msgTemp = message;
+                 // getUsersInfo();
                   receiveMessage(message);
               }
               if (strstr(message, "CHANGED_STATUS")!=NULL){
@@ -397,6 +434,16 @@ void * recive(void * threadData) {
                   if (strstr(clientTo,"msg")!=NULL){
                     who = getId(message,cTo);
                     sendMessage(stat,who);
+                  }
+                  if (strstr(clientTo,"rec")!=NULL){
+                    printf("**********\n");
+                    printf("%s\n",msgTemp );
+                    printf("%s\n",message );
+                    char *idString =  getMessage(msgTemp);
+                    char *idString2 =  getMessageId(msgTemp);
+                    char *idString3 = receiveUser2(message,idString2);
+                    printf("%s",idString3);
+                    printf(">%s\n", idString);
                   }
                   else{
                     printf("Hasta aqui\n");
@@ -573,7 +620,7 @@ printf("----------------------------------------------------------\n");
          {
            case 1: //  Chat with a user
            clientTo="msg";
-            printf("Ingrese el alias de usuario para ver su informacion: \n");
+            printf("Ingrese el alias de usuario para chatear: \n");
             fgets(cTo, 100, stdin);
             printf("Ingrese un nuevo mensaje: \n");
             fgets(stat, 100, stdin);
