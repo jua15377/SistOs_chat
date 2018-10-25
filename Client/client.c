@@ -155,7 +155,7 @@ void receiveMessage(message){
     struct json_object  *id, *user,*status,*messagej,*from,*to,*action,*name;
     response = json_tokener_parse(message);
     json_object_object_get_ex(response, "from", &from); // TODO Handle to use with the user
-    json_object_object_get_ex(response, "message", &messagej);
+    json_object_object_get_ex(response, "action", &messagej);
     char *idString =  json_object_get_string(from);
     char *idString2 =  json_object_get_string(messagej);
     printf("%s", idString);
@@ -321,10 +321,10 @@ changeStatus(message){
  struct json_object  *id, *user,*status,*messagej,*from,*to,*action,*name;
  request = json_object_new_object();
  action = json_object_new_string("CHANGE_STATUS");
- user = json_object_new_string(info.userName);
+ id = json_object_new_string(info.id);
  status = json_object_new_string(LastcharDel(message));
 json_object_object_add(request, "action", action);
-json_object_object_add(request, "user", user);
+json_object_object_add(request, "user", id);
 json_object_object_add(request, "status", status);
 char *respuesta = json_object_get_string(request);
 printf("%s \n",respuesta);
